@@ -19,7 +19,7 @@ depths = {"K" : 1,
           "G" : 6,
           "S" : 7
           }
-base = 3
+base = 1
 
 def save_tree(node, string, level):
     mdep = level

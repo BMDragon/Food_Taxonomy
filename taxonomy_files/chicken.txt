@@ -1,0 +1,32 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Sarcopterygii; 
+Dipnotetrapodomorpha; 
+Tetrapoda; 
+Amniota; 
+Sauropsida; 
+Sauria; 
+Archelosauria; 
+Archosauria; 
+Dinosauria; 
+Saurischia; 
+Theropoda; 
+Coelurosauria; 
+Aves; C
+Neognathae; 
+Galloanserae; 
+Galliformes; O
+Phasianidae; F
+Phasianinae; 
+Gallus; G
+Gallus gallus; S

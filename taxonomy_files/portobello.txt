@@ -1,0 +1,13 @@
+Eukaryota; 
+Opisthokonta; 
+Fungi; K
+Dikarya; 
+Basidiomycota; P
+Agaricomycotina; 
+Agaricomycetes; C
+Agaricomycetidae; 
+Agaricales; O
+Agaricineae; 
+Agaricaceae; F
+Agaricus; G
+Agaricus bisporus; S
