@@ -25,5 +25,5 @@ Pecora;
 Bovidae; 
 Bovinae; 
 Bos; 
-Bos taurus;
+Bos taurus; 
 Bos taurus taurus
