@@ -1,10 +1,10 @@
-Eukaryota; 
+Eukaryota;
 Opisthokonta; 
-Metazoa; 
+Metazoa; K
 Eumetazoa; 
 Bilateria; 
 Deuterostomia; 
-Chordata; 
+Chordata; P
 Craniata; 
 Vertebrata; 
 Gnathostomata; 
@@ -14,18 +14,18 @@ Sarcopterygii;
 Dipnotetrapodomorpha; 
 Tetrapoda; 
 Amniota; 
-Mammalia; 
+Mammalia; C
 Theria; 
 Eutheria; 
 Boreoeutheria; 
 Euarchontoglires; 
-Primates; 
+Primates; O
 Haplorrhini; 
 Simiiformes; 
 Catarrhini; 
 Hominoidea; 
-Hominidae; 
+Hominidae; F
 Homininae; 
-Homo; 
-Homo sapiens; 
+Homo; G
+Homo sapiens; S
 Homo sapiens sapiens

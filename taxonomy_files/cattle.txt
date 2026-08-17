@@ -1,10 +1,10 @@
 Eukaryota; 
 Opisthokonta; 
-Metazoa; 
+Metazoa; K
 Eumetazoa; 
 Bilateria; 
 Deuterostomia; 
-Chordata; 
+Chordata; P
 Craniata; 
 Vertebrata; 
 Gnathostomata; 
@@ -14,16 +14,16 @@ Sarcopterygii;
 Dipnotetrapodomorpha; 
 Tetrapoda; 
 Amniota; 
-Mammalia; 
+Mammalia; C
 Theria; 
 Eutheria; 
 Boreoeutheria; 
 Laurasiatheria; 
-Artiodactyla; 
+Artiodactyla; O
 Ruminantia; 
 Pecora; 
-Bovidae; 
+Bovidae; F
 Bovinae; 
-Bos; 
-Bos taurus; 
+Bos; G
+Bos taurus; S
 Bos taurus taurus
