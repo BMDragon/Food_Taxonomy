@@ -1,0 +1,20 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Bivalvia; C
+Autobranchia; 
+Heteroconchia; 
+Euheterodonta; 
+Imparidentia; 
+Neoheterodontei; 
+Venerida; O
+Veneroidea; 
+Veneridae; F
+Leukoma; G
+Leukoma staminea; S

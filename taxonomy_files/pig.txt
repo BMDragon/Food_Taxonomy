@@ -1,0 +1,27 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Sarcopterygii; 
+Dipnotetrapodomorpha; 
+Tetrapoda; 
+Amniota; 
+Mammalia; C
+Theria; 
+Eutheria; 
+Boreoeutheria; 
+Laurasiatheria; 
+Artiodactyla; O
+Suina; 
+Suidae; F
+Sus; G
+Sus scrofa; S
+Sus scrofa domestica

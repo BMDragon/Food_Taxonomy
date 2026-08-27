@@ -1,0 +1,21 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Malvids; 
+Myrtales; O
+Myrtaceae; F
+Myrtoideae; 
+Melaleuceae; 
+Melaleuca; G
+Melaleuca alternifolia; S
