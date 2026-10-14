@@ -17,4 +17,4 @@ Ericaceae; F
 Vaccinioideae; 
 Vaccinieae; 
 Vaccinium; G
-Vaccinium myrtillus; S
+Vaccinium corymbosum; S

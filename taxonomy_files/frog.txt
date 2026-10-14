@@ -20,4 +20,4 @@ Neobatrachia;
 Ranoidea; 
 Ranidae; F
 Pelophylax; G
-Pelophylax cf. esculentus; S
+Pelophylax ridibundus x Pelophylax lessonae; S
