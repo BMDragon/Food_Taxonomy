@@ -27,6 +27,7 @@ base = 1
 script_dir = os.path.dirname(os.path.abspath(__file__))
 taxonomy_dir = os.path.join(script_dir, "taxonomy_files")
 output_path = os.path.join(script_dir, "taxon_tree.txt")
+major_output_path = os.path.join(script_dir, "taxon_tree_major.txt")
 stats_path = os.path.join(script_dir, "stats.md")
 
 def parse_line(line, filename, line_num):
@@ -39,12 +40,14 @@ def parse_line(line, filename, line_num):
         raise ValueError(f"{filename}:{line_num}: unknown rank code '{code}' (expected one of {', '.join(RANK_ORDER)})")
     return name, code
 
-def build_tree():
+def build_tree(folder=taxonomy_dir):
+    # Returns the root node and a list of warnings about likely mistakes
     root = None
-    for filename in sorted(os.listdir(taxonomy_dir)):
+    leaf_files = {}
+    for filename in sorted(os.listdir(folder)):
         if not filename.endswith(".txt"):
             continue
-        with open(os.path.join(taxonomy_dir, filename), 'r') as file:
+        with open(os.path.join(folder, filename), 'r') as file:
             node = None
             last_rank = -1
             for line_num, line in enumerate(file, start=1):
@@ -64,9 +67,31 @@ def build_tree():
                     node = root
                 else:
                     node = node.get_or_add_child(name, code)
+        if node is not None:
+            leaf_files.setdefault(id(node), (node, []))[1].append(filename)
     if root is None:
-        raise ValueError(f"no taxonomy files found in {taxonomy_dir}")
-    return root
+        raise ValueError(f"no taxonomy files found in {folder}")
+    return root, find_warnings(root, leaf_files)
+
+def find_warnings(root, leaf_files):
+    warnings = []
+    for node, filenames in leaf_files.values():
+        if len(filenames) > 1:
+            warnings.append(f"{' and '.join(filenames)} all end at '{node.value}' (duplicate entry?)")
+    # Children are keyed by name under their parent, so the same name under two
+    # parents makes two nodes: right for true homonyms, but usually a copy-paste slip.
+    # Only the point where the parent names differ is reported, not every taxon below it.
+    parents = {}
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        for child in node.children.values():
+            parents.setdefault(child.value, set()).add(node.value)
+            stack.append(child)
+    for name, parent_names in sorted(parents.items()):
+        if len(parent_names) > 1:
+            warnings.append(f"'{name}' appears under different parents: {', '.join(sorted(parent_names))}")
+    return warnings
 
 def compute_depths(root):
     # Each major rank is drawn at a single depth across the whole tree: the
@@ -96,6 +121,24 @@ def save_tree(node, depths, parent_depth):
     if len(node.children) == 0:
         return label
     return '(' + ','.join(save_tree(child, depths, depth) for child in node.children.values()) + ')' + label
+
+def ranked_descendants(node):
+    # The nearest ranked nodes (or leaves) below node, skipping unranked clades
+    for child in node.children.values():
+        if child.code != '' or len(child.children) == 0:
+            yield child
+        else:
+            yield from ranked_descendants(child)
+
+def save_major_tree(node, parent_depth):
+    # Like save_tree, but keeps only the root, the major ranks and the leaves.
+    # Each rank has a fixed depth, so a skipped rank shows as a longer branch.
+    depth = RANK_ORDER.index(node.code) + 1 if node.code != '' else parent_depth + 1
+    label = node.value + ':' + str((depth - parent_depth)*base)
+    children = list(ranked_descendants(node))
+    if len(children) == 0:
+        return label
+    return '(' + ','.join(save_major_tree(child, depth) for child in children) + ')' + label
 
 RANK_PLURALS = {"K": "Kingdoms", "P": "Phyla", "C": "Classes", "O": "Orders",
                 "F": "Families", "G": "Genera", "S": "Species"}
@@ -158,16 +201,23 @@ def main():
     parser = argparse.ArgumentParser(description="Build taxon_tree.txt from the files in taxonomy_files/.")
     parser.add_argument("--stats", action="store_true", help="print counts of the organisms and taxa in the tree")
     parser.add_argument("--stats-md", action="store_true", help="also write the stats to stats.md")
+    parser.add_argument("--major-only", action="store_true",
+                        help="also write taxon_tree_major.txt, keeping only the major ranks and the leaves")
     args = parser.parse_args()
 
     try:
-        root = build_tree()
+        root, warnings = build_tree()
     except ValueError as e:
         sys.exit(f"Error: {e}")
+    for warning in warnings:
+        print(f"Warning: {warning}", file=sys.stderr)
     depths = compute_depths(root)
 
     with open(output_path, 'w') as f:
         f.write(save_tree(root, depths, -1) + ";\n")
+    if args.major_only:
+        with open(major_output_path, 'w') as f:
+            f.write(save_major_tree(root, -1) + ";\n")
 
     if args.stats or args.stats_md:
         stats = format_stats(*collect_stats(root))

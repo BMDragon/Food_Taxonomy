@@ -1,0 +1,175 @@
+# Tests for make_tree.py. Run from the project folder with:
+#   python3 -m unittest discover tests
+
+import itertools
+import os
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import make_tree
+
+# Small lineages with different numbers of unranked clades between the major
+# ranks, which is what made rank alignment depend on file order before
+HUMAN = ["Eukaryota; ", "Opisthokonta; ", "Metazoa; K", "Chordata; P", "Craniata; ", "Vertebrata; ",
+         "Mammalia; C", "Theria; ", "Primates; O", "Haplorrhini; ", "Hominidae; F", "Homo; G",
+         "Homo sapiens; S", "Homo sapiens sapiens"]
+CHICKEN = ["Eukaryota; ", "Opisthokonta; ", "Metazoa; K", "Chordata; P", "Craniata; ", "Vertebrata; ",
+           "Tetrapoda; ", "Amniota; ", "Sauropsida; ", "Dinosauria; ", "Theropoda; ", "Aves; C",
+           "Galliformes; O", "Phasianidae; F", "Gallus; G", "Gallus gallus; S"]
+APPLE = ["Eukaryota; ", "Viridiplantae; K", "Streptophyta; P", "Embryophyta; ", "Magnoliopsida; C",
+         "Rosids; ", "Fabids; ", "Rosales; O", "Rosaceae; F", "Amygdaloideae; ", "Maleae; ", "Malus; G",
+         "Malus domestica; S"]
+BROCCOLI = ["Eukaryota; ", "Viridiplantae; K", "Streptophyta; P", "Embryophyta; ", "Magnoliopsida; C",
+            "Rosids; ", "Malvids; ", "Brassicales; O", "Brassicaceae; F", "Brassica; G",
+            "Brassica oleracea; S", "Brassica oleracea var. italica"]
+SAMPLE = {"human.txt": HUMAN, "chicken.txt": CHICKEN, "apple.txt": APPLE, "broccoli.txt": BROCCOLI}
+
+def write_folder(folder, files):
+    for filename, lines in files.items():
+        with open(os.path.join(folder, filename), 'w') as f:
+            f.write("\n".join(lines))
+
+def parse_newick(text):
+    # Returns (name, branch length, children) for the root of a Newick string
+    def parse(i):
+        children = []
+        if text[i] == '(':
+            i += 1
+            while True:
+                child, i = parse(i)
+                children.append(child)
+                if text[i] == ',':
+                    i += 1
+                    continue
+                i += 1
+                break
+        j = i
+        while text[j] not in ',);':
+            j += 1
+        name, length = text[i:j].rsplit(':', 1)
+        return (name, int(length), children), j
+    text = text.strip()
+    return parse(0)[0]
+
+def walk(node, distance=0, parent=None):
+    # Yields (name, branch length, distance from the top, parent name) for every node
+    name, length, children = node
+    distance += length
+    yield name, length, distance, parent
+    for child in children:
+        yield from walk(child, distance, name)
+
+def rank_codes(root):
+    codes = {}
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        codes[node.value] = node.code
+        stack.extend(node.children.values())
+    return codes
+
+def build(folder):
+    root, warnings = make_tree.build_tree(folder)
+    full = make_tree.save_tree(root, make_tree.compute_depths(root), -1) + ";"
+    major = make_tree.save_major_tree(root, -1) + ";"
+    return root, warnings, full, major
+
+class TreeTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.folder = self.tmp.name
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def folders(self):
+        # The sample lineages, plus the real taxonomy files
+        write_folder(self.folder, SAMPLE)
+        return [self.folder, make_tree.taxonomy_dir]
+
+    def test_branch_lengths_positive(self):
+        for folder in self.folders():
+            _, _, full, major = build(folder)
+            for tree in (full, major):
+                for name, length, _, _ in walk(parse_newick(tree)):
+                    self.assertGreater(length, 0, f"{name} in {folder}")
+
+    def test_ranks_aligned(self):
+        for folder in self.folders():
+            root, _, full, major = build(folder)
+            codes = rank_codes(root)
+            for tree in (full, major):
+                distances = {}
+                for name, _, distance, _ in walk(parse_newick(tree)):
+                    if codes.get(name, '') != '':
+                        distances.setdefault(codes[name], set()).add(distance)
+                for code, found in distances.items():
+                    self.assertEqual(len(found), 1, f"rank {code} at distances {found} in {folder}")
+                self.assertEqual(set(distances), set(make_tree.RANK_ORDER))
+
+    def test_output_independent_of_file_order(self):
+        # Prefixes change the sorted order the files are read in
+        results = set()
+        for order in itertools.permutations(SAMPLE.items()):
+            with tempfile.TemporaryDirectory() as folder:
+                write_folder(folder, {f"{i}_{name}": lines for i, (name, lines) in enumerate(order)})
+                _, _, full, major = build(folder)
+                results.add(tuple(sorted(walk(parse_newick(full)))) + tuple(sorted(walk(parse_newick(major)))))
+        self.assertEqual(len(results), 1)
+
+    def test_major_only_drops_unranked_clades(self):
+        write_folder(self.folder, SAMPLE)
+        root, _, _, major = build(self.folder)
+        codes = rank_codes(root)
+        names = {name for name, _, _, _ in walk(parse_newick(major))}
+        for name in ("Opisthokonta", "Craniata", "Rosids", "Haplorrhini", "Maleae"):
+            self.assertNotIn(name, names)
+        # Leaves are kept even when unranked
+        self.assertIn("Homo sapiens sapiens", names)
+        self.assertIn("Brassica oleracea var. italica", names)
+        for name in names - {"Eukaryota", "Homo sapiens sapiens", "Brassica oleracea var. italica"}:
+            self.assertNotEqual(codes[name], '', name)
+
+    def assertBuildError(self, files, message):
+        write_folder(self.folder, files)
+        with self.assertRaises(ValueError) as context:
+            make_tree.build_tree(self.folder)
+        self.assertIn(message, str(context.exception))
+
+    def test_unknown_rank_code(self):
+        self.assertBuildError({"a.txt": APPLE[:7] + ["Rosales; X"]}, "unknown rank code 'X'")
+
+    def test_ranks_out_of_order(self):
+        self.assertBuildError({"a.txt": APPLE[:7] + ["Rosales; P"]}, "out of order")
+
+    def test_wrong_root(self):
+        self.assertBuildError({"a.txt": APPLE, "b.txt": ["Bacteria; "] + HUMAN[1:]}, "expected 'Eukaryota'")
+
+    def test_no_warnings_for_clean_files(self):
+        for folder in self.folders():
+            _, warnings, _, _ = build(folder)
+            self.assertEqual(warnings, [], folder)
+
+    def test_warns_about_duplicate_entries(self):
+        write_folder(self.folder, {"apple.txt": APPLE, "apple2.txt": APPLE, "human.txt": HUMAN})
+        _, warnings, _, _ = build(self.folder)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("apple.txt and apple2.txt", warnings[0])
+
+    def test_species_above_a_subspecies_is_not_a_duplicate(self):
+        write_folder(self.folder, {"human.txt": HUMAN, "human_species.txt": HUMAN[:-1]})
+        _, warnings, _, _ = build(self.folder)
+        self.assertEqual(warnings, [])
+
+    def test_warns_about_name_under_two_parents(self):
+        # "Fabids" skipped in one file puts Rosales under two different parents
+        slipped = [line for line in APPLE if line != "Fabids; "]
+        write_folder(self.folder, {"apple.txt": APPLE, "pear.txt": slipped[:-2] + ["Pyrus; G", "Pyrus communis; S"]})
+        _, warnings, _, _ = build(self.folder)
+        # Only where the lineages split, not again for every taxon below it
+        self.assertEqual(warnings, ["'Rosales' appears under different parents: Fabids, Rosids"])
+
+if __name__ == "__main__":
+    unittest.main()

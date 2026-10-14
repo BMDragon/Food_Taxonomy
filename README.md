@@ -22,6 +22,12 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 
 `python3 make_tree.py --stats` also prints how many organisms are in the tree (species, subspecies, varieties), how many distinct taxa there are at each major rank, and a breakdown by kingdom. `--stats-md` writes the same report to `stats.md`.
 
+`python3 make_tree.py --major-only` also writes `taxon_tree_major.txt`, a simpler tree with only the major ranks and the organisms themselves (unranked clades such as `Opisthokonta` are left out).
+
+`make_tree.py` warns about likely mistakes in the taxonomy files: two files that end at the same organism, and a name that appears under two different parents (usually a skipped or extra line in one file).
+
+Run the tests with `python3 -m unittest discover tests`.
+
 Text file input format:
 - One taxon per line, from the root (`Eukaryota`) down to the organism.
 - Each line is `Name; R`, where `R` is the rank code: `K`, `P`, `C`, `O`, `F`, `G` or `S`.
