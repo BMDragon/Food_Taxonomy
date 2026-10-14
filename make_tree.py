@@ -197,12 +197,72 @@ def format_stats(kingdoms, totals):
     lines += markdown_table(header, rows)
     return "\n".join(lines) + "\n"
 
+RANK_NAMES = {"K": "Kingdom", "P": "Phylum", "C": "Class", "O": "Order", "F": "Family", "G": "Genus", "S": "Species"}
+
+def layout_tree(root, depths, major):
+    # Returns (node, x, y, children) for every node drawn: x is the node's depth,
+    # leaves get y = 0, 1, 2... top to bottom, and a parent sits midway between its children
+    placed = []
+    next_leaf = [0]
+    def place(node, parent_depth):
+        if major:
+            depth = RANK_ORDER.index(node.code) + 1 if node.code != '' else parent_depth + 1
+            children = list(ranked_descendants(node))
+        else:
+            depth = depths[node.code] if node.code != '' else parent_depth + 1
+            children = list(node.children.values())
+        child_entries = [place(child, depth) for child in children]
+        if child_entries:
+            y = (child_entries[0][2] + child_entries[-1][2]) / 2
+        else:
+            y = next_leaf[0]
+            next_leaf[0] += 1
+        entry = (node, depth, y, child_entries)
+        placed.append(entry)
+        return entry
+    place(root, -1)
+    return placed, next_leaf[0]
+
+def draw_tree(root, depths, major, path):
+    # matplotlib is only needed for this option
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    placed, leaf_count = layout_tree(root, depths, major)
+    max_depth = max(x for _, x, _, _ in placed)
+    fig, ax = plt.subplots(figsize=(14 if major else 18, 1 + 0.32 * leaf_count))
+    for node, x, y, children in placed:
+        if children:
+            ax.plot([x, x], [children[0][2], children[-1][2]], color="#555555", linewidth=0.8)
+            for _, child_x, child_y, _ in children:
+                ax.plot([x, child_x], [child_y, child_y], color="#555555", linewidth=0.8)
+            # Label ranked clades just above their branch. A species above a subspecies
+            # or variety is skipped: the leaf's name already contains it.
+            if (node.code != '' or node is root) and node.code != 'S':
+                ax.text(x - 0.08, y + 0.12, node.value, ha="right", va="bottom", fontsize=6, color="#333333")
+        else:
+            ax.text(x + 0.15, y, node.value, ha="left", va="center", fontsize=8, style="italic")
+    # Column headings for the aligned major ranks, angled so close ranks don't overlap
+    rank_depths = {code: RANK_ORDER.index(code) + 1 for code in RANK_ORDER} if major else depths
+    for code, x in rank_depths.items():
+        ax.text(x, -1.0, RANK_NAMES[code], ha="left", va="bottom", rotation=35, fontsize=7, color="#777777")
+        ax.axvline(x, color="#dddddd", linewidth=0.5, zorder=0)
+    ax.set_xlim(-1, max_depth + 6)
+    ax.set_ylim(leaf_count, -2.5)
+    ax.axis("off")
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+
 def main():
     parser = argparse.ArgumentParser(description="Build taxon_tree.txt from the files in taxonomy_files/.")
     parser.add_argument("--stats", action="store_true", help="print counts of the organisms and taxa in the tree")
     parser.add_argument("--stats-md", action="store_true", help="also write the stats to stats.md")
     parser.add_argument("--major-only", action="store_true",
                         help="also write taxon_tree_major.txt, keeping only the major ranks and the leaves")
+    parser.add_argument("--draw", metavar="FILE",
+                        help="draw the tree to an image (.svg, .png or .pdf); with --major-only, draws that tree")
     args = parser.parse_args()
 
     try:
@@ -218,6 +278,11 @@ def main():
     if args.major_only:
         with open(major_output_path, 'w') as f:
             f.write(save_major_tree(root, -1) + ";\n")
+    if args.draw:
+        try:
+            draw_tree(root, depths, args.major_only, args.draw)
+        except ImportError:
+            sys.exit("Error: --draw needs matplotlib (pip install --user matplotlib)")
 
     if args.stats or args.stats_md:
         stats = format_stats(*collect_stats(root))

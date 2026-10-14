@@ -70,7 +70,8 @@ def find_taxid(name):
     if len(ids) == 0:
         raise FetchError(f"'{name}' was not found in NCBI Taxonomy")
     if len(ids) > 1:
-        names = [taxon.findtext("ScientificName") for taxon in fetch_taxa(ids)]
+        names = [f"{taxon.findtext('ScientificName')} ({taxon.findtext('Rank')}, taxid {taxon.findtext('TaxId')})"
+                 for taxon in fetch_taxa(ids)]
         raise FetchError(f"'{name}' matches {len(ids)} taxa: " + "; ".join(names) + ". Use the exact scientific name.")
     return ids[0]
 

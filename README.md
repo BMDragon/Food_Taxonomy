@@ -24,6 +24,10 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 
 `python3 make_tree.py --major-only` also writes `taxon_tree_major.txt`, a simpler tree with only the major ranks and the organisms themselves (unranked clades such as `Opisthokonta` are left out).
 
+`python3 make_tree.py --draw tree.svg` draws the tree to an image (`.svg`, `.png` or `.pdf`), with the major ranks lined up in columns. Add `--major-only` to draw the simpler tree. Drawing needs matplotlib (`pip install --user -r requirements.txt`); nothing else does.
+
+`python3 gaps.py Mammalia` lists the groups one rank down (here, orders of mammals) and which of them you haven't eaten yet, using NCBI Taxonomy. Use `--rank` to choose another rank (kingdom to family), e.g. `python3 gaps.py Viridiplantae --rank order`. NCBI results are cached in `.ncbi_cache/`; `--refresh` fetches them again.
+
 `make_tree.py` warns about likely mistakes in the taxonomy files: two files that end at the same organism, and a name that appears under two different parents (usually a skipped or extra line in one file).
 
 Run the tests with `python3 -m unittest discover tests`.

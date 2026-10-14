@@ -1,0 +1,2 @@
+# Only needed for make_tree.py --draw; everything else uses the standard library
+matplotlib

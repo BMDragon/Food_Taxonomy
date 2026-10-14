@@ -132,6 +132,26 @@ class TreeTests(unittest.TestCase):
         for name in names - {"Eukaryota", "Homo sapiens sapiens", "Brassica oleracea var. italica"}:
             self.assertNotEqual(codes[name], '', name)
 
+    def test_draw_writes_an_image_with_every_organism(self):
+        try:
+            import matplotlib  # noqa: F401
+        except ImportError:
+            self.skipTest("matplotlib is not installed")
+        write_folder(self.folder, SAMPLE)
+        root, _ = make_tree.build_tree(self.folder)
+        depths = make_tree.compute_depths(root)
+        for major in (False, True):
+            path = os.path.join(self.folder, f"tree_{major}.svg")
+            make_tree.draw_tree(root, depths, major, path)
+            with open(path, 'r') as f:
+                svg = f.read()
+            # matplotlib writes text as paths, so check the layout instead of the svg text
+            self.assertTrue(svg.startswith("<?xml"))
+            placed, leaf_count = make_tree.layout_tree(root, depths, major)
+            leaves = [node.value for node, _, _, children in placed if not children]
+            self.assertEqual(sorted(leaves), sorted(lines[-1].partition(';')[0].strip() for lines in SAMPLE.values()))
+            self.assertEqual(leaf_count, len(SAMPLE))
+
     def assertBuildError(self, files, message):
         write_folder(self.folder, files)
         with self.assertRaises(ValueError) as context:
