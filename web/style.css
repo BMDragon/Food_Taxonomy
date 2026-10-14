@@ -116,7 +116,8 @@ a { color: var(--accent); }
 .tree .leaf::before { content: "•"; color: var(--kingdom, var(--text-muted)); margin-right: .45rem; }
 .tree .name { font-weight: 600; }
 .tree .sci { font-style: italic; }
-.tree .rank, .tree .count, .tree .via, .tree .food { color: var(--text-muted); font-size: .85em; margin-left: .45rem; }
+.tree.full ul { padding-left: .75rem; }
+.tree .rank, .tree .count, .tree .food { color: var(--text-muted); font-size: .85em; margin-left: .45rem; }
 .tree .rank { text-transform: uppercase; letter-spacing: .04em; font-size: .72em; }
 .tree .food { color: var(--text-secondary); }
 mark { background: var(--mark); color: inherit; border-radius: 2px; }

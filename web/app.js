@@ -131,15 +131,8 @@ function renderNode(node, query, files, showAll) {
       el("span", { class: "sci" }, highlight(node.name, query)),
       foods ? el("span", { class: "food" }, highlight(foods, query)) : null);
   }
-  // A chain of single unranked clades is shown on one row: "Metazoa › Eumetazoa › Bilateria"
-  const via = [];
-  let last = node;
-  while (last.children.length === 1 && !last.children[0].code && last.children[0].children.length > 0) {
-    last = last.children[0];
-    via.push(last.name);
-  }
   const showChildren = showAll || (query && selfMatches(node, query, files));
-  const children = last.children.filter((child) => showChildren || matches(child, query, files));
+  const children = node.children.filter((child) => showChildren || matches(child, query, files));
   const rankName = node.code ? treeData.rankNames[node.code] : null;
   return el("li", { style },
     el("details", { open: true },
@@ -147,7 +140,6 @@ function renderNode(node, query, files, showAll) {
         node.code === "K" ? el("span", { class: "kdot", "aria-hidden": "true" }) : null,
         el("span", { class: node.code ? "name" : "" }, highlight(node.name, query)),
         rankName ? el("span", { class: "rank" }, rankName) : null,
-        via.length ? el("span", { class: "via" }, "› ", highlight(via.join(" › "), query)) : null,
         el("span", { class: "count" }, plural(node.leaves, "organism", "organisms"))),
       el("ul", {}, children.map((child) => renderNode(child, query, files, showChildren)))));
 }
@@ -159,6 +151,8 @@ function renderTree() {
   const root = major ? majorOnly(treeData.tree) : treeData.tree;
   annotate(root, null);
   const container = document.getElementById("tree");
+  // Every clade gets a row, so the full tree is much deeper; it uses a narrower indent
+  container.classList.toggle("full", !major);
   if (query && !matches(root, query, treeData.files)) {
     container.replaceChildren(el("p", { class: "muted" }, `Nothing matches “${query}”.`));
     return;
