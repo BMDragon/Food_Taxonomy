@@ -233,15 +233,13 @@ def draw_tree(root, depths, major, path, fmt=None):
     placed, leaf_count = layout_tree(root, depths, major)
     max_depth = max(x for _, x, _, _ in placed)
     fig, ax = plt.subplots(figsize=(14 if major else 18, 1 + 0.32 * leaf_count))
+    parent_x = {}
     for node, x, y, children in placed:
         if children:
             ax.plot([x, x], [children[0][2], children[-1][2]], color="#555555", linewidth=0.8)
-            for _, child_x, child_y, _ in children:
+            for child, child_x, child_y, _ in children:
                 ax.plot([x, child_x], [child_y, child_y], color="#555555", linewidth=0.8)
-            # Label ranked clades just above their branch. A species above a subspecies
-            # or variety is skipped: the leaf's name already contains it.
-            if (node.code != '' or node is root) and node.code != 'S':
-                ax.text(x - 0.08, y + 0.12, node.value, ha="right", va="bottom", fontsize=6, color="#333333")
+                parent_x[id(child)] = x
         else:
             ax.text(x + 0.15, y, node.value, ha="left", va="center", fontsize=8, style="italic")
     # Column headings for the aligned major ranks, angled so close ranks don't overlap
@@ -253,6 +251,35 @@ def draw_tree(root, depths, major, path, fmt=None):
     ax.set_ylim(leaf_count, -2.5)
     ax.axis("off")
     fig.tight_layout()
+
+    # Label ranked clades just above the branch leading into them, ending at the node.
+    # A species above a subspecies or variety is skipped: the leaf's name contains it.
+    # Labels are placed after the layout is final, so they can be measured.
+    renderer = fig.canvas.get_renderer()
+    # The root's label goes left of its vertical line; widen the left margin until it fits
+    _, root_x, root_y, _ = placed[-1]
+    root_label = ax.annotate(root.value, (root_x, root_y), xytext=(-4, 0), textcoords="offset points",
+                             ha="right", va="center", fontsize=7, color="#333333")
+    for _ in range(3):
+        overflow = ax.get_window_extent(renderer).x0 - root_label.get_window_extent(renderer).x0
+        if overflow <= 0:
+            break
+        left, right = ax.get_xlim()
+        units_per_pixel = (right - left) / ax.get_window_extent(renderer).width
+        ax.set_xlim(left - (overflow + 6) * units_per_pixel * 1.2, right)
+    for node, x, y, children in placed:
+        if node is root or not children or node.code == '' or node.code == 'S':
+            continue
+        label = ax.annotate(node.value, (x, y), xytext=(-3, 2), textcoords="offset points",
+                            ha="right", va="bottom", fontsize=7, color="#333333")
+        # On a branch shorter than the label, start it just after the parent's
+        # vertical line instead of running back across it
+        if id(node) in parent_x:
+            parent_edge = ax.transData.transform((parent_x[id(node)], y))[0]
+            if label.get_window_extent(renderer).x0 < parent_edge + 2:
+                label.xy = (parent_x[id(node)], y)
+                label.xyann = (3, 2)
+                label.set_ha("left")
     fig.savefig(path, format=fmt)
     plt.close(fig)
 
