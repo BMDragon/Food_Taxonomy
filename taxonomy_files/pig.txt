@@ -24,4 +24,4 @@ Suina;
 Suidae; F
 Sus; G
 Sus scrofa; S
-Sus scrofa domestica
+Sus scrofa domesticus
