@@ -211,6 +211,7 @@ function loadCladogram() {
   cladogramKey = key;
   const src = `/api/cladogram.svg?major=${major}&token=${encodeURIComponent(token)}&v=${Date.now()}`;
   const img = document.getElementById("clado-img");
+  img.parentElement.classList.toggle("natural", !major);
   const status = document.getElementById("clado-status");
   status.hidden = false;
   status.textContent = "Drawing…";

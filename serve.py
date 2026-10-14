@@ -143,7 +143,8 @@ class Handler(BaseHTTPRequestHandler):
             root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
         buffer = io.BytesIO()
         try:
-            make_tree.draw_tree(root, make_tree.compute_depths(root), major, buffer, "svg")
+            make_tree.draw_tree(root, make_tree.compute_depths(root), major, buffer, "svg",
+                                common_names=make_tree.leaf_common_names(make_tree.taxonomy_dir))
         except ImportError:
             raise ApiError("drawing needs matplotlib (pip install --user matplotlib)")
         self.send(200, buffer.getvalue(), "image/svg+xml")

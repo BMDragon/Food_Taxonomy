@@ -223,63 +223,93 @@ def layout_tree(root, depths, major):
     place(root, -1)
     return placed, next_leaf[0]
 
-def draw_tree(root, depths, major, path, fmt=None):
-    # path is a file name, or a file object with fmt ("svg", "png"...) given
+def leaf_common_names(folder=taxonomy_dir):
+    # Maps each file's last entry to the common name in its file name
+    # ("american_clawed_lobster.txt" -> "american clawed lobster")
+    names = {}
+    for filename in sorted(os.listdir(folder)):
+        if not filename.endswith(".txt"):
+            continue
+        with open(os.path.join(folder, filename), 'r') as file:
+            lines = [line for line in file if line.strip()]
+        if lines:
+            leaf = lines[-1].partition(';')[0].strip()
+            names.setdefault(leaf, []).append(filename[:-4].replace("_", " "))
+    return {leaf: ", ".join(common) for leaf, common in names.items()}
+
+LABEL_SIZE = 7
+LEAF_SIZE = 8
+ROW_HEIGHT = 23   # points between organisms
+
+def draw_tree(root, depths, major, path, fmt=None, common_names=None):
+    # path is a file name, or a file object with fmt ("svg", "png"...) given.
+    # common_names maps organisms to the common name shown after them.
     # matplotlib is only needed for this option
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.font_manager import FontProperties
+    from matplotlib.textpath import TextToPath
 
+    text_path = TextToPath()
+    def text_width(text, size, style="normal"):
+        return text_path.get_text_width_height_descent(text, FontProperties(size=size, style=style), ismath=False)[0]
+
+    common_names = common_names or {}
     placed, leaf_count = layout_tree(root, depths, major)
     max_depth = max(x for _, x, _, _ in placed)
-    fig, ax = plt.subplots(figsize=(14 if major else 18, 1 + 0.32 * leaf_count))
-    parent_x = {}
+    parent_x = {id(child): x for _, x, _, children in placed for child, _, _, _ in children}
+
+    # Every clade is named above the branch leading into it. A species above a
+    # subspecies or variety is skipped: the organism's name already contains it.
+    labelled = [(node, x, y) for node, x, y, children in placed
+                if children and node is not root and node.code != 'S']
+    # Each depth step is made wide enough that every name fits on its own branch
+    unit = 60.0 if major else 30.0
+    for node, x, y in labelled:
+        unit = max(unit, (text_width(node.value, LABEL_SIZE) + 8) / (x - parent_x[id(node)]))
+    leaf_texts = {}
+    for node, x, y, children in placed:
+        if not children:
+            common = common_names.get(node.value)
+            leaf_texts[id(node)] = (node.value, f"({common})" if common else "")
+    right_points = max(text_width(name, LEAF_SIZE, "italic") + 4 + text_width(common, LEAF_SIZE)
+                       for name, common in leaf_texts.values()) + 20
+    left_points = text_width(root.value, LABEL_SIZE) + 16
+    width = left_points + (max_depth - placed[-1][1]) * unit + right_points
+    height = (leaf_count + 3.5) * ROW_HEIGHT
+
+    fig = plt.figure(figsize=(width / 72, height / 72))
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.set_xlim(placed[-1][1] - left_points / unit, max_depth + right_points / unit)
+    ax.set_ylim(leaf_count, -3.0)
+    ax.axis("off")
+
     for node, x, y, children in placed:
         if children:
             ax.plot([x, x], [children[0][2], children[-1][2]], color="#555555", linewidth=0.8)
-            for child, child_x, child_y, _ in children:
+            for _, child_x, child_y, _ in children:
                 ax.plot([x, child_x], [child_y, child_y], color="#555555", linewidth=0.8)
-                parent_x[id(child)] = x
         else:
-            ax.text(x + 0.15, y, node.value, ha="left", va="center", fontsize=8, style="italic")
+            name, common = leaf_texts[id(node)]
+            ax.annotate(name, (x, y), xytext=(4, 0), textcoords="offset points",
+                        ha="left", va="center", fontsize=LEAF_SIZE, style="italic")
+            if common:
+                ax.annotate(common, (x, y), xytext=(8 + text_width(name, LEAF_SIZE, "italic"), 0),
+                            textcoords="offset points", ha="left", va="center", fontsize=LEAF_SIZE, color="#555555")
+    for node, x, y in labelled:
+        # Ranked clades in dark text, unranked clades lighter
+        ax.annotate(node.value, (x, y), xytext=(-3, 2), textcoords="offset points", ha="right", va="bottom",
+                    fontsize=LABEL_SIZE, color="#222222" if node.code else "#888888")
+    _, root_x, root_y, _ = placed[-1]
+    ax.annotate(root.value, (root_x, root_y), xytext=(-4, 0), textcoords="offset points",
+                ha="right", va="center", fontsize=LABEL_SIZE, color="#222222")
+
     # Column headings for the aligned major ranks, angled so close ranks don't overlap
     rank_depths = {code: RANK_ORDER.index(code) + 1 for code in RANK_ORDER} if major else depths
     for code, x in rank_depths.items():
-        ax.text(x, -1.0, RANK_NAMES[code], ha="left", va="bottom", rotation=35, fontsize=7, color="#777777")
+        ax.text(x, -1.2, RANK_NAMES[code], ha="left", va="bottom", rotation=35, fontsize=7, color="#777777")
         ax.axvline(x, color="#dddddd", linewidth=0.5, zorder=0)
-    ax.set_xlim(-1, max_depth + 6)
-    ax.set_ylim(leaf_count, -2.5)
-    ax.axis("off")
-    fig.tight_layout()
-
-    # Label ranked clades just above the branch leading into them, ending at the node.
-    # A species above a subspecies or variety is skipped: the leaf's name contains it.
-    # Labels are placed after the layout is final, so they can be measured.
-    renderer = fig.canvas.get_renderer()
-    # The root's label goes left of its vertical line; widen the left margin until it fits
-    _, root_x, root_y, _ = placed[-1]
-    root_label = ax.annotate(root.value, (root_x, root_y), xytext=(-4, 0), textcoords="offset points",
-                             ha="right", va="center", fontsize=7, color="#333333")
-    for _ in range(3):
-        overflow = ax.get_window_extent(renderer).x0 - root_label.get_window_extent(renderer).x0
-        if overflow <= 0:
-            break
-        left, right = ax.get_xlim()
-        units_per_pixel = (right - left) / ax.get_window_extent(renderer).width
-        ax.set_xlim(left - (overflow + 6) * units_per_pixel * 1.2, right)
-    for node, x, y, children in placed:
-        if node is root or not children or node.code == '' or node.code == 'S':
-            continue
-        label = ax.annotate(node.value, (x, y), xytext=(-3, 2), textcoords="offset points",
-                            ha="right", va="bottom", fontsize=7, color="#333333")
-        # On a branch shorter than the label, start it just after the parent's
-        # vertical line instead of running back across it
-        if id(node) in parent_x:
-            parent_edge = ax.transData.transform((parent_x[id(node)], y))[0]
-            if label.get_window_extent(renderer).x0 < parent_edge + 2:
-                label.xy = (parent_x[id(node)], y)
-                label.xyann = (3, 2)
-                label.set_ha("left")
     fig.savefig(path, format=fmt)
     plt.close(fig)
 
@@ -308,7 +338,7 @@ def main():
             f.write(save_major_tree(root, -1) + ";\n")
     if args.draw:
         try:
-            draw_tree(root, depths, args.major_only, args.draw)
+            draw_tree(root, depths, args.major_only, args.draw, common_names=leaf_common_names())
         except ImportError:
             sys.exit("Error: --draw needs matplotlib (pip install --user matplotlib)")
 

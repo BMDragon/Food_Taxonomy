@@ -152,6 +152,11 @@ class TreeTests(unittest.TestCase):
             self.assertEqual(sorted(leaves), sorted(lines[-1].partition(';')[0].strip() for lines in SAMPLE.values()))
             self.assertEqual(leaf_count, len(SAMPLE))
 
+    def test_leaf_common_names_come_from_file_names(self):
+        write_folder(self.folder, {"american_clawed_lobster.txt": HUMAN, "apple.txt": APPLE, "apple_2.txt": APPLE})
+        self.assertEqual(make_tree.leaf_common_names(self.folder),
+                         {"Homo sapiens sapiens": "american clawed lobster", "Malus domestica": "apple, apple 2"})
+
     def assertBuildError(self, files, message):
         write_folder(self.folder, files)
         with self.assertRaises(ValueError) as context:

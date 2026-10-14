@@ -125,6 +125,8 @@ mark { background: var(--mark); color: inherit; border-radius: 2px; }
 /* Cladogram */
 .figure { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: .5rem; overflow-x: auto; }
 .figure img { display: block; width: 100%; min-width: 900px; height: auto; }
+/* The full cladogram is far wider than the page: show it at its own size and scroll */
+.figure.natural img { width: auto; min-width: 0; max-width: none; }
 
 /* Stats */
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; }
