@@ -121,6 +121,12 @@ a { color: var(--accent); }
 .tree .rank { text-transform: uppercase; letter-spacing: .04em; font-size: .72em; }
 .tree .food { color: var(--text-secondary); }
 mark { background: var(--mark); color: inherit; border-radius: 2px; }
+.tree .remove {
+  margin-left: .6rem; padding: 0 .45rem; font-size: .78em; line-height: 1.5;
+  background: none; color: var(--text-muted); border: 1px solid var(--border); border-radius: 4px;
+}
+.tree .remove:hover, .tree .remove:focus-visible { color: var(--error-border); border-color: var(--error-border); }
+.banner button { margin-left: .5rem; padding: .15rem .6rem; }
 
 /* Cladogram */
 .figure { background: #ffffff; border: 1px solid var(--border); border-radius: 8px; padding: .5rem; overflow-x: auto; }

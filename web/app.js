@@ -126,10 +126,16 @@ function selfMatches(node, query, files) {
 function renderNode(node, query, files, showAll) {
   const style = node.kingdom ? `--kingdom: ${kingdomVar(node.kingdom)}` : null;
   if (node.children.length === 0) {
-    const foods = (files[node.name] || []).map(foodName).join(", ");
+    const leafFiles = files[node.name] || [];
+    const foods = leafFiles.map(foodName).join(", ");
     return el("li", { class: "leaf", style },
       el("span", { class: "sci" }, highlight(node.name, query)),
-      foods ? el("span", { class: "food" }, highlight(foods, query)) : null);
+      foods ? el("span", { class: "food" }, highlight(foods, query)) : null,
+      leafFiles.map((filename) => el("button", {
+        type: "button", class: "remove",
+        title: `Remove ${filename}`, "aria-label": `Remove ${foodName(filename)} (${node.name})`,
+        onclick: () => removeFile(filename, node.name),
+      }, leafFiles.length > 1 ? `Remove ${foodName(filename)}` : "Remove")));
   }
   const showChildren = showAll || (query && selfMatches(node, query, files));
   const children = node.children.filter((child) => showChildren || matches(child, query, files));
@@ -189,6 +195,34 @@ async function loadTree() {
   collect(treeData.tree);
   document.getElementById("gaps-taxa").replaceChildren(...options.sort().map((name) => el("option", { value: name })));
   renderTree();
+}
+
+const treeStatus = document.getElementById("tree-status");
+
+async function removeFile(filename, name) {
+  if (!confirm(`Remove ${foodName(filename)} (${name})?\n\nThis deletes taxonomy_files/${filename}. You can undo it right after.`)) return;
+  try {
+    const removed = await api("/api/remove", { filename });
+    const undo = el("button", { type: "button", class: "secondary" }, "Undo");
+    undo.addEventListener("click", async () => {
+      undo.disabled = true;
+      try {
+        await api("/api/save", { filename: removed.filename, text: removed.text });
+        treeStatus.replaceChildren(banner("ok", `Restored taxonomy_files/${removed.filename}.`));
+        cladogramKey = null;
+        await loadTree();
+      } catch (error) {
+        treeStatus.replaceChildren(banner("error", `Couldn't restore ${removed.filename}: ${error.message}`));
+      }
+    });
+    treeStatus.replaceChildren(banner("ok",
+      `Removed taxonomy_files/${removed.filename} and rebuilt taxon_tree.txt. Commit the change from VS Code when you're ready. `,
+      undo));
+    cladogramKey = null;
+    await loadTree();
+  } catch (error) {
+    treeStatus.replaceChildren(banner("error", error.message));
+  }
 }
 
 document.getElementById("tree-search").addEventListener("input", renderTree);

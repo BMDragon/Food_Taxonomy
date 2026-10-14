@@ -88,6 +88,39 @@ class ServerTests(unittest.TestCase):
         self.assertIn("not saved", json.loads(body)["error"])
         self.assertFalse(os.path.exists(os.path.join(self.folder, "broken.txt")))
 
+    def test_remove_and_undo(self):
+        apple_path = os.path.join(self.folder, "apple.txt")
+        with open(apple_path, 'r') as f:
+            original = f.read()
+        status, body = self.request("/api/remove", {"filename": "apple.txt"})
+        self.assertEqual(status, 200, body)
+        removed = json.loads(body)
+        self.assertFalse(os.path.exists(apple_path))
+        self.assertEqual(removed["text"], original)
+        # The tree was rebuilt without it
+        with open(make_tree.output_path, 'r') as f:
+            self.assertNotIn("Malus domestica", f.read())
+        # Undo saves the same text back
+        self.assertEqual(self.request("/api/save", {"filename": removed["filename"], "text": removed["text"]})[0], 200)
+        with open(apple_path, 'r') as f:
+            self.assertEqual(f.read(), original)
+
+    def test_remove_refuses_bad_requests(self):
+        self.assertEqual(self.request("/api/remove", {"filename": "nothing_here"})[0], 400)
+        # A path is reduced to a plain file name inside taxonomy_files/
+        outside = os.path.join(self.tmp.name, "outside.txt")
+        with open(outside, 'w') as f:
+            f.write("keep me")
+        self.assertEqual(self.request("/api/remove", {"filename": "../outside.txt"})[0], 400)
+        self.assertTrue(os.path.exists(outside))
+        self.assertEqual(self.request("/api/remove", {"filename": "apple"}, token="wrong")[0], 403)
+        # The last organism can't be removed
+        for name in ("apple", "chicken", "broccoli"):
+            self.assertEqual(self.request("/api/remove", {"filename": name})[0], 200)
+        status, body = self.request("/api/remove", {"filename": "human"})
+        self.assertEqual(status, 400)
+        self.assertIn("last organism", json.loads(body)["error"])
+
     def test_bad_requests(self):
         self.assertEqual(self.request("/api/nope")[0], 404)
         self.assertEqual(self.request("/api/lookup", {"name": ""})[0], 400)

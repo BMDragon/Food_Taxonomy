@@ -114,6 +114,7 @@ class Handler(BaseHTTPRequestHandler):
             ("GET", "/api/gaps"): self.api_gaps,
             ("POST", "/api/lookup"): self.api_lookup,
             ("POST", "/api/save"): self.api_save,
+            ("POST", "/api/remove"): self.api_remove,
         }
         route = routes.get(("GET" if body is None else "POST", path))
         if route is None:
@@ -188,6 +189,23 @@ class Handler(BaseHTTPRequestHandler):
                 rebuild()
                 raise ApiError(f"{filename} was not saved: {e}")
         self.send_json({"filename": filename, "warnings": warnings})
+
+    def api_remove(self, query, body):
+        # Deletes one taxonomy file and rebuilds the tree. The file's text is sent
+        # back so the page can offer to undo (by saving it again).
+        filename = fetch_lineage.clean_filename(str(body.get("filename", "")).strip())
+        with files_lock:
+            path = os.path.join(make_tree.taxonomy_dir, filename)
+            if not os.path.isfile(path):
+                raise ApiError(f"{filename} doesn't exist")
+            remaining = [name for name in os.listdir(make_tree.taxonomy_dir) if name.endswith(".txt")]
+            if len(remaining) == 1:
+                raise ApiError("can't remove the last organism; the tree needs at least one")
+            with open(path, 'r') as f:
+                text = f.read()
+            os.remove(path)
+            _, warnings, _ = rebuild()
+        self.send_json({"filename": filename, "text": text, "warnings": warnings})
 
 def main():
     parser = argparse.ArgumentParser(description="Serve the Food Taxonomy website on localhost.")
