@@ -223,7 +223,8 @@ def layout_tree(root, depths, major):
     place(root, -1)
     return placed, next_leaf[0]
 
-def draw_tree(root, depths, major, path):
+def draw_tree(root, depths, major, path, fmt=None):
+    # path is a file name, or a file object with fmt ("svg", "png"...) given
     # matplotlib is only needed for this option
     import matplotlib
     matplotlib.use("Agg")
@@ -252,7 +253,7 @@ def draw_tree(root, depths, major, path):
     ax.set_ylim(leaf_count, -2.5)
     ax.axis("off")
     fig.tight_layout()
-    fig.savefig(path)
+    fig.savefig(path, format=fmt)
     plt.close(fig)
 
 def main():

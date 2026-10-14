@@ -32,6 +32,18 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 
 Run the tests with `python3 -m unittest discover tests`.
 
+## Website
+
+`python3 serve.py` starts a local website and prints a link like `http://localhost:8765/?token=...`. Open that link (the token keeps other users of a shared machine out). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
+
+- **Tree**: the whole tree, collapsible and searchable by taxon or food name; "Major ranks only" hides unranked clades.
+- **Cladogram**: the drawn tree (needs matplotlib).
+- **Stats**: organism and taxon counts, overall and by kingdom.
+- **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` is rebuilt automatically. Commit the new file afterwards.
+- **Gaps**: the `gaps.py` report for any taxon.
+
+Press Ctrl+C in the terminal to stop the server.
+
 Text file input format:
 - One taxon per line, from the root (`Eukaryota`) down to the organism.
 - Each line is `Name; R`, where `R` is the rank code: `K`, `P`, `C`, `O`, `F`, `G` or `S`.

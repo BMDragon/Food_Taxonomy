@@ -131,10 +131,14 @@ def parse_request(arg):
     filename, sep, name = arg.partition('=')
     if not sep:
         return arg.strip(), None
-    filename = filename.strip()
-    if not filename.endswith(".txt"):
-        filename += ".txt"
-    return name.strip(), filename
+    return name.strip(), filename.strip()
+
+def clean_filename(filename):
+    # Lowercase with underscores, and never a path outside taxonomy_files/
+    stem = filename[:-4] if filename.lower().endswith(".txt") else filename
+    if to_filename(stem) == ".txt":
+        raise FetchError(f"'{filename}' is not a usable file name")
+    return to_filename(stem)
 
 def choose_filename(name, ncbi_name, common_names):
     # A common name the user typed wins over NCBI's preferred one
@@ -146,8 +150,12 @@ def choose_filename(name, ncbi_name, common_names):
                          f"my_food=\"{ncbi_name}\"")
     return to_filename(common_names[0])
 
-def process(arg, args, spellings, leaves):
-    name, filename = parse_request(arg)
+def prepare(name, filename=None, force=False):
+    # Looks the organism up and returns what would be written, without writing it:
+    # {"filename", "text", "ncbi_name", "taxid", "note"}
+    spellings, leaves = read_existing()
+    if filename is not None:
+        filename = clean_filename(filename)
     taxid = find_taxid(name)
     lineage, common_names = fetch_taxon(taxid)
     ncbi_name, leaf_rank = lineage[-1]
@@ -155,24 +163,34 @@ def process(arg, args, spellings, leaves):
         raise FetchError(f"'{ncbi_name}' is not a eukaryote (lineage starts at '{lineage[0][0]}')")
     if leaf_rank not in LEAF_RANKS:
         raise FetchError(f"'{ncbi_name}' has rank '{leaf_rank}'; only species, subspecies and variety are tracked")
-    if ncbi_name != name:
-        print(f"note: '{name}' is listed in NCBI as '{ncbi_name}'")
+    note = f"'{name}' is listed in NCBI as '{ncbi_name}'" if ncbi_name != name else None
     duplicate = leaves.get(ncbi_name.lower())
-    if duplicate is not None and duplicate != filename and not args.force:
+    if duplicate is not None and duplicate != filename and not force:
         raise FetchError(f"'{ncbi_name}' is already in {duplicate} (use --force to add it anyway)")
     if filename is None:
         filename = choose_filename(name, ncbi_name, common_names)
+    return {"filename": filename, "text": format_lineage(lineage, spellings),
+            "ncbi_name": ncbi_name, "taxid": taxid, "note": note}
 
-    text = format_lineage(lineage, spellings)
-    if args.dry_run:
-        print(f"== {filename} (taxid {taxid})\n{text}")
-        return
+def save(filename, text, force=False):
+    filename = clean_filename(filename)
     path = os.path.join(taxonomy_dir, filename)
-    if os.path.exists(path) and not args.force:
+    if os.path.exists(path) and not force:
         raise FetchError(f"{filename} already exists (use --force to overwrite)")
     with open(path, 'w') as f:
         f.write(text)
-    print(f"wrote {filename} ({ncbi_name}, taxid {taxid})")
+    return filename
+
+def process(arg, args):
+    name, filename = parse_request(arg)
+    result = prepare(name, filename, args.force)
+    if result["note"]:
+        print("note: " + result["note"])
+    if args.dry_run:
+        print(f"== {result['filename']} (taxid {result['taxid']})\n{result['text']}")
+        return
+    save(result["filename"], result["text"], args.force)
+    print(f"wrote {result['filename']} ({result['ncbi_name']}, taxid {result['taxid']})")
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch lineages from NCBI Taxonomy into taxonomy_files/.")
@@ -184,11 +202,10 @@ def main():
     parser.add_argument("--build", action="store_true", help="run make_tree.py afterwards")
     args = parser.parse_args()
 
-    spellings, leaves = read_existing()
     failed = 0
     for arg in args.names:
         try:
-            process(arg, args, spellings, leaves)
+            process(arg, args)
         except FetchError as e:
             print(f"Error: {e}", file=sys.stderr)
             failed += 1

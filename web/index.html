@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Food Taxonomy</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Food Taxonomy</h1>
+    <p class="subtitle">Everything I remember eating, on the tree of life</p>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="tree">Tree</button>
+      <button role="tab" data-tab="cladogram">Cladogram</button>
+      <button role="tab" data-tab="stats">Stats</button>
+      <button role="tab" data-tab="add">Add organism</button>
+      <button role="tab" data-tab="gaps">Gaps</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="warnings" class="banner warn" hidden></div>
+
+    <section id="tab-tree" class="panel" role="tabpanel">
+      <div class="toolbar">
+        <input id="tree-search" type="search" placeholder="Search taxa or foods" aria-label="Search taxa or foods">
+        <label class="check"><input id="tree-major" type="checkbox" checked> Major ranks only</label>
+        <button id="tree-expand" class="secondary">Expand all</button>
+        <button id="tree-collapse" class="secondary">Collapse all</button>
+      </div>
+      <p id="tree-summary" class="muted"></p>
+      <div id="tree" class="tree"></div>
+    </section>
+
+    <section id="tab-cladogram" class="panel" role="tabpanel" hidden>
+      <div class="toolbar">
+        <label class="check"><input id="clado-major" type="checkbox" checked> Major ranks only</label>
+        <a id="clado-open" target="_blank" rel="noopener">Open full size</a>
+      </div>
+      <p id="clado-status" class="muted">Drawing…</p>
+      <div class="figure"><img id="clado-img" alt="Cladogram of every organism in the tree"></div>
+    </section>
+
+    <section id="tab-stats" class="panel" role="tabpanel" hidden>
+      <div id="stats-tiles" class="tiles"></div>
+      <div class="columns">
+        <div>
+          <h2>Distinct taxa</h2>
+          <table id="stats-ranks"></table>
+        </div>
+        <div>
+          <h2>By kingdom</h2>
+          <div class="scroll"><table id="stats-kingdoms"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-add" class="panel" role="tabpanel" hidden>
+      <form id="add-form" class="form">
+        <label>Scientific or common name
+          <input id="add-name" required placeholder="e.g. Salmo salar or honey bee">
+        </label>
+        <label>File name <span class="muted">(optional; defaults to the common name)</span>
+          <input id="add-file" placeholder="e.g. salmon">
+        </label>
+        <label class="check"><input id="add-force" type="checkbox"> Overwrite or allow duplicates</label>
+        <button type="submit">Look up on NCBI</button>
+      </form>
+      <div id="add-result"></div>
+    </section>
+
+    <section id="tab-gaps" class="panel" role="tabpanel" hidden>
+      <form id="gaps-form" class="form inline">
+        <label>Taxon
+          <input id="gaps-taxon" list="gaps-taxa" required placeholder="e.g. Mammalia">
+          <datalist id="gaps-taxa"></datalist>
+        </label>
+        <label>Rank
+          <select id="gaps-rank">
+            <option value="">Next rank down</option>
+            <option value="kingdom">Kingdom</option>
+            <option value="phylum">Phylum</option>
+            <option value="class">Class</option>
+            <option value="order">Order</option>
+            <option value="family">Family</option>
+          </select>
+        </label>
+        <label class="check"><input id="gaps-refresh" type="checkbox"> Refresh from NCBI</label>
+        <button type="submit">Find gaps</button>
+      </form>
+      <div id="gaps-result"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
