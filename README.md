@@ -1,7 +1,20 @@
 # Food Taxonomy
 Taxonomy of things I can remember consuming
 
-Usage: Obtain taxonomic information from NCBI, then copy it into a `.txt` file in the "taxonomy_files" folder with the format described below. Then run `python3 make_tree.py`.
+Usage: Add a `.txt` file to the "taxonomy_files" folder for each organism, in the format described below, then run `python3 make_tree.py`.
+
+The easiest way to add a file is to fetch it from NCBI Taxonomy:
+```
+python3 fetch_lineage.py apple="Malus domestica" "Brassica oleracea var. capitata" --build
+```
+- `apple="Malus domestica"` writes `taxonomy_files/apple.txt`; a bare name writes e.g. `brassica_oleracea_var_capitata.txt`.
+- Only eukaryotic species, subspecies and varieties are accepted. Common names and synonyms are tried if the scientific name isn't found.
+- Clade names already used in other files keep their existing spelling (e.g. NCBI's `eudicotyledons` is written `Eudicotyledons`).
+- Existing files, and organisms already in another file, are not overwritten or duplicated unless `--force` is given.
+- `--dry-run` prints the files instead of writing them; `--build` runs `make_tree.py` afterwards.
+- Set the `NCBI_API_KEY` environment variable to use an NCBI API key (optional; raises the request limit from 3 to 10 per second).
+
+Organisms NCBI doesn't list (e.g. `Homo sapiens sapiens`) can still be added by hand.
 
 Generates a cladogram file (`taxon_tree.txt`) in the Newick format, for upload into https://cladogrammaker.com/
 
