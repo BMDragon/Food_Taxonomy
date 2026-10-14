@@ -20,6 +20,8 @@ Generates a cladogram file (`taxon_tree.txt`) in the Newick format, for upload i
 
 Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up at the same depth across the whole tree.
 
+`python3 make_tree.py --stats` also prints how many organisms are in the tree (species, subspecies, varieties), how many distinct taxa there are at each major rank, and a breakdown by kingdom. `--stats-md` writes the same report to `stats.md`.
+
 Text file input format:
 - One taxon per line, from the root (`Eukaryota`) down to the organism.
 - Each line is `Name; R`, where `R` is the rank code: `K`, `P`, `C`, `O`, `F`, `G` or `S`.
