@@ -1,6 +1,20 @@
 # Food Taxonomy
 Taxonomy of things I can remember consuming
 
+## Website
+
+`python3 serve.py` starts a local website and prints a link like `http://localhost:8765/?token=...`. Open that link (the token keeps other users of a shared machine out). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
+
+- **Tree**: the whole tree, collapsible and searchable by taxon or food name; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
+- **Cladogram**: the drawn tree (needs matplotlib).
+- **Stats**: organism and taxon counts, overall and by kingdom.
+- **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` is rebuilt automatically. Commit the new file afterwards.
+- **Gaps**: the `gaps.py` report for any taxon.
+
+Press Ctrl+C in the terminal to stop the server.
+
+## Command line
+
 Usage: Add a `.txt` file to the "taxonomy_files" folder for each organism, in the format described below, then run `python3 make_tree.py`.
 
 The easiest way to add a file is to fetch it from NCBI Taxonomy:
@@ -31,18 +45,6 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 `make_tree.py` warns about likely mistakes in the taxonomy files: two files that end at the same organism, and a name that appears under two different parents (usually a skipped or extra line in one file).
 
 Run the tests with `python3 -m unittest discover tests`.
-
-## Website
-
-`python3 serve.py` starts a local website and prints a link like `http://localhost:8765/?token=...`. Open that link (the token keeps other users of a shared machine out). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
-
-- **Tree**: the whole tree, collapsible and searchable by taxon or food name; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
-- **Cladogram**: the drawn tree (needs matplotlib).
-- **Stats**: organism and taxon counts, overall and by kingdom.
-- **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` is rebuilt automatically. Commit the new file afterwards.
-- **Gaps**: the `gaps.py` report for any taxon.
-
-Press Ctrl+C in the terminal to stop the server.
 
 Text file input format:
 - One taxon per line, from the root (`Eukaryota`) down to the organism.
