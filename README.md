@@ -7,7 +7,7 @@ The easiest way to add a file is to fetch it from NCBI Taxonomy:
 ```
 python3 fetch_lineage.py apple="Malus domestica" "Brassica oleracea var. capitata" --build
 ```
-- `apple="Malus domestica"` writes `taxonomy_files/apple.txt`; a bare name writes e.g. `brassica_oleracea_var_capitata.txt`.
+- `apple="Malus domestica"` writes `taxonomy_files/apple.txt`. Without a file name, the file is named after the common name: the one you typed (`"honey bee"` → `honey_bee.txt`), otherwise NCBI's (`"Brassica oleracea var. capitata"` → `cabbage.txt`). If NCBI has no common name, give a file name.
 - Only eukaryotic species, subspecies and varieties are accepted. Common names and synonyms are tried if the scientific name isn't found.
 - Clade names already used in other files keep their existing spelling (e.g. NCBI's `eudicotyledons` is written `Eudicotyledons`).
 - Existing files, and organisms already in another file, are not overwritten or duplicated unless `--force` is given.

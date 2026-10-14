@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -73,11 +74,19 @@ def find_taxid(name):
         raise FetchError(f"'{name}' matches {len(ids)} taxa: " + "; ".join(names) + ". Use the exact scientific name.")
     return ids[0]
 
-def fetch_lineage(taxid):
+def fetch_taxon(taxid):
+    # Returns the lineage as (name, rank) pairs and the taxon's common names,
+    # GenBank's preferred common name first
     taxon = fetch_taxa([taxid])[0]
     lineage = [(t.findtext("ScientificName"), t.findtext("Rank")) for t in taxon.find("LineageEx")]
     lineage.append((taxon.findtext("ScientificName"), taxon.findtext("Rank")))
-    return [(name, rank) for name, rank in lineage if name != "cellular organisms"]
+    lineage = [(name, rank) for name, rank in lineage if name != "cellular organisms"]
+    common_names = []
+    other_names = taxon.find("OtherNames")
+    if other_names is not None:
+        for tag in ("GenbankCommonName", "CommonName"):
+            common_names += [e.text for e in other_names.findall(tag) if e.text]
+    return lineage, common_names
 
 def read_existing():
     # spellings maps lowercased names to how they are already written in the taxonomy
@@ -111,23 +120,35 @@ def format_lineage(lineage, spellings):
             lines.append(name + "; " + code)
     return "\n".join(lines)
 
-def default_filename(name):
-    return name.lower().replace(" ", "_").replace(".", "") + ".txt"
+def to_filename(common_name):
+    # "American lobster" -> "american_lobster.txt"
+    return re.sub(r"[^a-z0-9]+", "_", common_name.lower()).strip("_") + ".txt"
 
 def parse_request(arg):
-    # "apple=Malus domestica" names the file; a bare name uses the scientific name
+    # "apple=Malus domestica" names the file; a bare name gets its file name from
+    # the common name once the organism is looked up
     filename, sep, name = arg.partition('=')
     if not sep:
-        return arg.strip(), default_filename(arg.strip())
+        return arg.strip(), None
     filename = filename.strip()
     if not filename.endswith(".txt"):
         filename += ".txt"
     return name.strip(), filename
 
+def choose_filename(name, ncbi_name, common_names):
+    # A common name the user typed wins over NCBI's preferred one
+    for common_name in common_names:
+        if common_name.lower() == name.lower():
+            return to_filename(name)
+    if len(common_names) == 0:
+        raise FetchError(f"NCBI has no common name for '{ncbi_name}'; give a file name, e.g. "
+                         f"my_food=\"{ncbi_name}\"")
+    return to_filename(common_names[0])
+
 def process(arg, args, spellings, leaves):
     name, filename = parse_request(arg)
     taxid = find_taxid(name)
-    lineage = fetch_lineage(taxid)
+    lineage, common_names = fetch_taxon(taxid)
     ncbi_name, leaf_rank = lineage[-1]
     if lineage[0][0] != ROOT:
         raise FetchError(f"'{ncbi_name}' is not a eukaryote (lineage starts at '{lineage[0][0]}')")
@@ -138,6 +159,8 @@ def process(arg, args, spellings, leaves):
     duplicate = leaves.get(ncbi_name.lower())
     if duplicate is not None and duplicate != filename and not args.force:
         raise FetchError(f"'{ncbi_name}' is already in {duplicate} (use --force to add it anyway)")
+    if filename is None:
+        filename = choose_filename(name, ncbi_name, common_names)
 
     text = format_lineage(lineage, spellings)
     if args.dry_run:
@@ -153,7 +176,8 @@ def process(arg, args, spellings, leaves):
 def main():
     parser = argparse.ArgumentParser(description="Fetch lineages from NCBI Taxonomy into taxonomy_files/.")
     parser.add_argument("names", nargs='+', metavar="[FILE=]NAME",
-                        help="scientific name, optionally prefixed with a file name, e.g. apple=\"Malus domestica\"")
+                        help="scientific or common name, optionally prefixed with a file name, e.g. "
+                             "apple=\"Malus domestica\"; otherwise the file is named after the common name")
     parser.add_argument("--force", action="store_true", help="overwrite existing files and allow organisms already in another file")
     parser.add_argument("--dry-run", action="store_true", help="print the files instead of writing them")
     parser.add_argument("--build", action="store_true", help="run make_tree.py afterwards")
