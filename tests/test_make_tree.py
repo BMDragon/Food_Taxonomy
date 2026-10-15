@@ -185,6 +185,21 @@ class TreeTests(unittest.TestCase):
         self.assertIn("Fo'o", names)
         self.assertIn("Avena sativa", {name for name, _, _, _ in walk(parse_newick(major))})
 
+    def test_human_is_the_last_row(self):
+        # HUMAN is written to the folder first (so read first), yet must come out last
+        write_folder(self.folder, {"a_human.txt": HUMAN, "b_chicken.txt": CHICKEN, "c_apple.txt": APPLE,
+                                   "d_broccoli.txt": BROCCOLI})
+        root, _, full, major = build(self.folder)
+        for tree in (full, major):
+            leaves = [name for name, _, _, _ in walk(parse_newick(tree))
+                      if name in ("Homo sapiens sapiens", "Gallus gallus", "Malus domestica",
+                                  "Brassica oleracea var. italica")]
+            self.assertEqual(leaves[-1], "Homo sapiens sapiens")
+        for major in (False, True):
+            placed, leaf_count = make_tree.layout_tree(root, make_tree.compute_depths(root), major)
+            bottom = max(placed, key=lambda entry: entry[2])
+            self.assertEqual(bottom[0].value, "Homo sapiens sapiens")
+
     def test_step_widths_fit_every_label_without_widening_other_steps(self):
         spans = [(0, 1, 50.0), (1, 3, 100.0), (3, 4, 5.0), (0, 4, 40.0)]
         widths = make_tree.step_widths(5, spans)

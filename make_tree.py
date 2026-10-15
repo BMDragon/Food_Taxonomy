@@ -12,6 +12,8 @@ class TreeNode:
         # True when a taxonomy file ends here. Usually a leaf, but a species can
         # also have an eaten variety below it (onion above shallot).
         self.eaten = False
+        # True on the path from the root to LAST_TAXON, which is drawn as the bottom row
+        self.leads_to_last = False
 
     def get_or_add_child(self, value, code):
         # Children are keyed by name under their parent, so identically named
@@ -81,7 +83,20 @@ def build_tree(folder=taxonomy_dir):
             leaf_files.setdefault(id(node), (node, []))[1].append(filename)
     if root is None:
         raise ValueError(f"no taxonomy files found in {folder}")
+    mark_last(root)
     return root, find_warnings(root, leaf_files)
+
+# The cladograms and the Newick file end with this taxon (us)
+LAST_TAXON = "Homo sapiens"
+
+def mark_last(node):
+    # Marks the nodes leading to LAST_TAXON; returns whether node is one of them
+    node.leads_to_last = node.value == LAST_TAXON or any(mark_last(child) for child in node.children.values())
+    return node.leads_to_last
+
+def ordered_children(node):
+    # Children in file order, except that the branch leading to LAST_TAXON goes last
+    return sorted(node.children.values(), key=lambda child: child.leads_to_last)
 
 def find_warnings(root, leaf_files):
     warnings = []
@@ -137,11 +152,11 @@ def save_tree(node, depths, parent_depth):
     label = newick_name(node.value) + ':' + str((depth - parent_depth)*base)
     if len(node.children) == 0:
         return label
-    return '(' + ','.join(save_tree(child, depths, depth) for child in node.children.values()) + ')' + label
+    return '(' + ','.join(save_tree(child, depths, depth) for child in ordered_children(node)) + ')' + label
 
 def ranked_descendants(node):
     # The nearest ranked nodes (or leaves) below node, skipping unranked clades
-    for child in node.children.values():
+    for child in ordered_children(node):
         if child.code != '' or len(child.children) == 0 or child.eaten:
             yield child
         else:
@@ -227,7 +242,7 @@ def layout_tree(root, depths, major):
             children = list(ranked_descendants(node))
         else:
             depth = depths[node.code] if node.code != '' else parent_depth + 1
-            children = list(node.children.values())
+            children = ordered_children(node)
         child_entries = [place(child, depth) for child in children]
         if child_entries:
             y = (child_entries[0][2] + child_entries[-1][2]) / 2
