@@ -1,0 +1,23 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Asterids; 
+Lamiids; 
+Gentianales; O
+Rubiaceae; F
+Ixoroideae; 
+Gardenieae complex; 
+Bertiereae - Coffeeae clade; 
+Coffeeae; 
+Coffea; G
+Coffea canephora; S

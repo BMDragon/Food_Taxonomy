@@ -1,0 +1,25 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Osteoglossocephalai; 
+Clupeocephala; 
+Euteleosteomorpha; 
+Protacanthopterygii; 
+Salmoniformes; O
+Salmonidae; F
+Coregoninae; 
+Coregonus; G
+Coregonus clupeaformis; S

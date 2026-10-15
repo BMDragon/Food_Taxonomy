@@ -1,0 +1,30 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Osteoglossocephalai; 
+Clupeocephala; 
+Euteleosteomorpha; 
+Neoteleostei; 
+Eurypterygia; 
+Ctenosquamata; 
+Acanthomorphata; 
+Euacanthomorphacea; 
+Percomorphaceae; 
+Eupercaria; 
+Eupercaria incertae sedis; 
+Moronidae; F
+Dicentrarchus; G
+Dicentrarchus labrax; S

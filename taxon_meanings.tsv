@@ -112,8 +112,9 @@ Bangiales	nori order
 Bangiophyceae	bangiophyte red algae
 Basidiomycota	club fungi
 Batrachia	frogs and salamanders
+Benincasa	winter melons
 Benincaseae	melon and gourd tribe
-Bertiereae-Coffeeae	coffee tribe group
+Bertiereae - Coffeeae clade	coffee tribe group
 Beta	beets
 Beta vulgaris	beet
 Betoideae	beet subfamily
@@ -132,6 +133,7 @@ Brassica	cabbages and mustards
 Brassica napus	rapeseed
 Brassica oleracea	wild cabbage
 Brassica rapa	turnip and field mustard
+Brassica rapa subsp. chinensis	bok-choy
 Brassicaceae	mustard family
 Brassicales	cabbage order
 Brassiceae	cabbage tribe
@@ -151,6 +153,8 @@ Campanulids	bellflower-allied plants
 Cancridae	rock crabs
 Cancroidea	rock crab superfamily
 Cannabaceae	hemp family
+Capparaceae	caper family
+Capparis	capers
 Capra	goats
 Caprinae	goat-antelopes
 Capsiceae	pepper tribe
@@ -163,11 +167,14 @@ Cardamineae	watercress tribe
 Cardueae	thistle tribe
 Carduinae	thistle subtribe
 Carduoideae	thistle subfamily
+Careae	caraway tribe
 Carica	papayas
 Caricaceae	papaya family
 Caridea	caridean shrimps
+Carum	caraways
 Carya	hickories and pecans
 Caryophyllales	carnation order
+Castanea	chestnuts
 Catarrhini	Old World monkeys and apes
 Cephalopoda	cephalopods
 Cervidae	deer
@@ -217,6 +224,8 @@ Communostraca	crabs, shrimps and barnacles
 Conifers I	pines and relatives
 Conifers II	cypresses, yews and relatives
 Convolvulaceae	morning-glory family
+Coregoninae	whitefishes
+Coregonus	whitefishes
 Coriandreae	coriander tribe
 Coriandrum	coriander
 Cornu	garden snail genus
@@ -253,6 +262,12 @@ Cynara cardunculus	cardoon and artichoke
 Cynara cardunculus subsp. cardunculus	wild cardoon
 Cyperaceae	sedge family
 Cyperoideae	sedge subfamily
+Cyprinidae	carp family
+Cypriniformes	carps and others
+Cyprininae	carp subfamily
+Cypriniphysae	carps, minnows and loaches
+Cyprinoidei	carp suborder
+Cyprinus	common carps
 Dactylopiidae	cochineal insects
 Dactylopius	cochineal insects
 Dalbergieae	rosewood and peanut tribe
@@ -265,8 +280,10 @@ Decapoda	ten-footed crustaceans
 Decapodiformes	ten-armed cephalopods
 Dendrobranchiata	prawns
 Deuterostomia	second-mouth animals
+Dicentrarchus	European sea basses
 Dicondylia	insects with two-hinged jaws
 Dikarya	two-nucleus fungi
+Dimocarpus	longans
 Dinosauria	dinosaurs
 Dioscorea	yams
 Dioscoreaceae	yam family
@@ -301,6 +318,9 @@ Ericaceae	heath family
 Ericales	heath order
 Eruca	rocket genus
 Eruca vesicaria	arugula
+Esocidae	pikes
+Esociformes	pikes and mudminnows
+Esox	pikes
 Euacanthomorphacea	true spiny-finned fishes
 Euarchontoglires	primates, rodents and allies
 Eubrachyura	advanced true crabs
@@ -312,6 +332,7 @@ Eumalacostraca	true soft-shelled crustaceans
 Eumetabola	true-metamorphosis insects
 Eumetazoa	true animals
 Eupercaria	true perch-like fishes
+Eupercaria incertae sedis	unplaced perch-like fishes
 Euphorbiaceae	spurge family
 Euphyllophyta	true-leaved plants
 Eupulmonata	true air-breathing snails
@@ -331,6 +352,7 @@ Fabaceae	legumes
 Fabales	legume order
 Fabeae	pea and lentil tribe
 Fabids	legume-related rosids
+Fagaceae	beech family
 Fagales	beech order
 Fagopyreae	buckwheat tribe
 Fagopyrum	buckwheats
@@ -389,6 +411,7 @@ Humulus	hops
 Husinae	beluga sturgeons and allies
 Huso	beluga sturgeons
 Hylocereeae	climbing cacti and dragon fruits
+Hypsizygus	beech mushrooms
 Illicium	star anises
 Imparidentia	unequal-toothed clams
 Incirrata	octopuses without cirri
@@ -435,6 +458,7 @@ Lutjanidae	snappers
 Lutjaniformes	snapper order
 Lutjaninae	snapper subfamily
 Lutjanus	snappers
+Lyophyllaceae	beech mushroom family
 Lythraceae	loosestrife family
 Macadamia	macadamias
 Magallana	Pacific cupped oysters
@@ -470,6 +494,7 @@ Metacarcinus	Dungeness and rock crabs
 Metazoa	animals
 Mollusca	molluscs
 Moraceae	mulberry family
+Moronidae	temperate basses
 Murraya	curry leaf genus
 Musa	bananas
 Musaceae	banana family
@@ -485,6 +510,7 @@ Mytilidae	mussels
 Mytilinae	mussel subfamily
 Mytiloidea	mussels and relatives
 Mytilus	blue mussels
+Nelumbo	lotuses
 Nelumbonaceae	lotus family
 Neoaves	modern birds
 Neobatrachia	modern frogs
@@ -522,11 +548,13 @@ Oryza	rice
 Oryzeae	rice tribe
 Oryzinae	rice subtribe
 Oryzoideae	rice subfamily
+Ostariophysi	carps, catfishes and allies
 Osteoglossocephalai	teleosts except eels and tarpons
 Ostreida	oyster order
 Ostreidae	oysters
 Ostreoidea	oysters and relatives
 Otomorpha	herrings, carps and catfishes
+Otophysi	fishes with hearing-linked bones
 Ovalentaria	sticky-egg fishes
 Ovis	sheep
 PACMAD clade	warm-season grasses incl. maize
@@ -583,7 +611,10 @@ Phyllostachys	timber bamboos
 Physalacriaceae	enoki mushroom family
 Physaleae	husk tomato tribe
 Physalis	ground cherries and tomatillos
+Pimenta	allspice genus
 Pimentinae	allspice subtribe
+Pimpinella	anise genus
+Pimpinelleae	anise tribe
 Pinaceae	pine family
 Pinales	pine order
 Pinidae	conifers
@@ -728,6 +759,7 @@ Thymus	thymes
 Tordylieae	parsnip tribe
 Tordyliinae	parsnip subtribe
 Tracheophyta	vascular plants
+Tricholomatineae	tricholoma mushroom group
 Trifolieae	clover tribe
 Trigonella	fenugreeks
 Trionychia	softshell turtles and allies
@@ -737,6 +769,7 @@ Triticeae	wheat tribe
 Triticinae	wheat subtribe
 Triticodae	wheat supertribe
 Triticum	wheats
+Triticum turgidum	rivet wheat
 Tuber	truffles
 Tuberaceae	truffle family
 Undaria	wakame seaweeds
@@ -760,6 +793,8 @@ Viteae	grape tribe
 Vitis	grapes
 Xiphias	swordfish
 Xiphiidae	swordfishes
+Zanthoxyloideae	prickly-ash subfamily
+Zanthoxylum	Sichuan peppers and prickly ashes
 Zea	maize and teosintes
 Zea mays	maize
 Zeiogadaria	dories and cods

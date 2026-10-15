@@ -1,0 +1,28 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Osteoglossocephalai; 
+Clupeocephala; 
+Otomorpha; 
+Ostariophysi; 
+Otophysi; 
+Cypriniphysae; 
+Cypriniformes; O
+Cyprinoidei; 
+Cyprinidae; F
+Cyprininae; 
+Cyprinus; G
+Cyprinus carpio; S

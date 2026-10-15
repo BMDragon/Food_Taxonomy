@@ -1,0 +1,13 @@
+Eukaryota; 
+Opisthokonta; 
+Fungi; K
+Dikarya; 
+Basidiomycota; P
+Agaricomycotina; 
+Agaricomycetes; C
+Agaricomycetidae; 
+Agaricales; O
+Tricholomatineae; 
+Lyophyllaceae; F
+Hypsizygus; G
+Hypsizygus marmoreus; S
