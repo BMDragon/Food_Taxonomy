@@ -35,6 +35,7 @@ Alpinia	galangals
 Altocrustacea	most crustaceans plus insects
 Amaranthaceae	amaranth family
 Amaryllidaceae	amaryllis family
+Amherstieae	tamarind tribe
 Amniota	amniotes
 Amphibia	amphibians
 Amygdaleae	stone fruit tribe
@@ -282,6 +283,7 @@ Daucus sect. Daucus	core carrot section
 Decapoda	ten-footed crustaceans
 Decapodiformes	ten-armed cephalopods
 Dendrobranchiata	prawns
+Detarioideae	tamarind subfamily
 Deuterostomia	second-mouth animals
 Dicentrarchus	European sea basses
 Dicondylia	insects with two-hinged jaws
@@ -370,17 +372,23 @@ Gadidae	cod family
 Gadiformes	cod order
 Gadoidei	cod suborder
 Gadus	cods
+Galegeae	licorice and goat's rue tribe
 Galliformes	landfowl
 Galloanserae	fowl and waterfowl
 Gallus	junglefowl and chickens
 Gardenieae complex	gardenias, coffee and allies
 Gastropoda	snails and slugs
+Gentiana	gentian
+Gentianaceae	gentian family
 Gentianales	gentian order
+Gentianeae	gentian tribe
+Gentianinae	gentian subtribe
 Glebionidinae	crown daisy subtribe
 Glebionis	crown daisies
 Glires	rodents and rabbits
 Glycine	soybean genus
 Glycine subgen. Soja	soybeans
+Glycyrrhiza	licorice
 Gnathostomata	jawed vertebrates
 Grossulariaceae	currant family
 Gunneridae	core eudicots
@@ -749,6 +757,7 @@ Sus	pigs
 Sus scrofa	pig
 Syzygieae	clove tribe
 Syzygium	cloves and rose apples
+Tamarindus	tamarind
 Teleostei	teleost fishes
 Teleostomi	bony vertebrates
 Testudinata	shelled reptiles

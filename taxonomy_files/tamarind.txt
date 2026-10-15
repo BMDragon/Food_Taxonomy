@@ -1,0 +1,21 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Fabids; 
+Fabales; O
+Fabaceae; F
+Detarioideae; 
+Amherstieae; 
+Tamarindus; G
+Tamarindus indica; S
