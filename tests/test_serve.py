@@ -25,10 +25,11 @@ class ServerTests(unittest.TestCase):
         self.folder = os.path.join(self.tmp.name, "taxonomy_files")
         os.mkdir(self.folder)
         write_folder(self.folder, SAMPLE)
-        self.saved = (make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, fetch_lineage.taxonomy_dir)
+        self.saved = (make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, make_tree.cladogram_full_path, fetch_lineage.taxonomy_dir)
         make_tree.taxonomy_dir = fetch_lineage.taxonomy_dir = self.folder
         make_tree.output_path = os.path.join(self.tmp.name, "taxon_tree.txt")
         make_tree.cladogram_path = os.path.join(self.tmp.name, "cladogram.png")
+        make_tree.cladogram_full_path = os.path.join(self.tmp.name, "cladogram_full.png")
         serve.Handler.token = TOKEN
         self.server = serve.ThreadingHTTPServer(("127.0.0.1", 0), serve.Handler)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -37,7 +38,7 @@ class ServerTests(unittest.TestCase):
     def tearDown(self):
         self.server.shutdown()
         self.server.server_close()
-        make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, fetch_lineage.taxonomy_dir = self.saved
+        make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, make_tree.cladogram_full_path, fetch_lineage.taxonomy_dir = self.saved
         self.tmp.cleanup()
 
     def request(self, path, body=None, token=TOKEN):
@@ -116,6 +117,8 @@ class ServerTests(unittest.TestCase):
         with open(make_tree.cladogram_path, 'rb') as f:
             with_pear = f.read()
         self.assertTrue(with_pear.startswith(b"\x89PNG"))
+        with open(make_tree.cladogram_full_path, 'rb') as f:
+            self.assertTrue(f.read().startswith(b"\x89PNG"))
         self.assertEqual(self.request("/api/remove", {"filename": "pear"})[0], 200)
         with open(make_tree.cladogram_path, 'rb') as f:
             self.assertNotEqual(f.read(), with_pear)

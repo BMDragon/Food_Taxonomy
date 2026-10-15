@@ -32,9 +32,12 @@ taxonomy_dir = os.path.join(script_dir, "taxonomy_files")
 output_path = os.path.join(script_dir, "taxon_tree.txt")
 major_output_path = os.path.join(script_dir, "taxon_tree_major.txt")
 stats_path = os.path.join(script_dir, "stats.md")
-# Redrawn on every build (major ranks only; the full drawing is too wide to view as an image)
+# Both redrawn on every build: the major-ranks cladogram, and the full one with
+# every clade (very wide, so drawn at a lower resolution)
 cladogram_path = os.path.join(script_dir, "cladogram.png")
+cladogram_full_path = os.path.join(script_dir, "cladogram_full.png")
 CLADOGRAM_DPI = 120
+CLADOGRAM_FULL_DPI = 100
 
 def parse_line(line, filename, line_num):
     name, sep, code = line.partition(';')
@@ -335,9 +338,11 @@ def draw_tree(root, depths, major, path, fmt=None, common_names=None, dpi=None):
     plt.close(fig)
 
 def write_cladogram(root, depths):
-    # Redraws cladogram.png; called whenever the tree is rebuilt.
+    # Redraws cladogram.png and cladogram_full.png; called whenever the tree is rebuilt.
     # Raises ImportError when matplotlib isn't installed.
-    draw_tree(root, depths, True, cladogram_path, common_names=leaf_common_names(taxonomy_dir), dpi=CLADOGRAM_DPI)
+    common_names = leaf_common_names(taxonomy_dir)
+    draw_tree(root, depths, True, cladogram_path, common_names=common_names, dpi=CLADOGRAM_DPI)
+    draw_tree(root, depths, False, cladogram_full_path, common_names=common_names, dpi=CLADOGRAM_FULL_DPI)
 
 def main():
     parser = argparse.ArgumentParser(description="Build taxon_tree.txt and cladogram.png from the files in taxonomy_files/.")
@@ -362,7 +367,7 @@ def main():
     try:
         write_cladogram(root, depths)
     except ImportError:
-        print("Warning: cladogram.png not updated (needs matplotlib: pip install --user matplotlib)", file=sys.stderr)
+        print("Warning: cladogram PNGs not updated (needs matplotlib: pip install --user matplotlib)", file=sys.stderr)
     if args.major_only:
         with open(major_output_path, 'w') as f:
             f.write(save_major_tree(root, -1) + ";\n")
