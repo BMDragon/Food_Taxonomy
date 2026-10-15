@@ -254,9 +254,25 @@ def leaf_common_names(folder=taxonomy_dir):
             names.setdefault(leaf, []).append(filename[:-4].replace("_", " "))
     return {leaf: ", ".join(common) for leaf, common in names.items()}
 
-LABEL_SIZE = 7
-LEAF_SIZE = 8
-ROW_HEIGHT = 23   # points between organisms
+LABEL_SIZE = 9    # clade names
+LEAF_SIZE = 10    # organisms
+HEADING_SIZE = 9  # rank column headings
+ROW_HEIGHT = 24   # points between organisms
+MIN_STEP = 12     # narrowest depth step, in points
+
+def step_widths(max_depth, spans):
+    # Width in points of each depth step (step d runs from depth d-1 to d), so that
+    # every label fits on its branch: spans are (parent depth, depth, points needed).
+    # Steps only get as wide as the labels crossing them need, instead of every
+    # step being as wide as the tightest label anywhere.
+    widths = [0.0] + [float(MIN_STEP)] * max_depth
+    # Short spans first, so longer ones can use the room those already added
+    for start, end, need in sorted(spans, key=lambda span: span[1] - span[0]):
+        deficit = need - sum(widths[start + 1:end + 1])
+        if deficit > 0:
+            for step in range(start + 1, end + 1):
+                widths[step] += deficit / (end - start)
+    return widths
 
 def draw_tree(root, depths, major, path, fmt=None, common_names=None, dpi=None):
     # path is a file name, or a file object with fmt ("svg", "png"...) given.
@@ -288,52 +304,53 @@ def draw_tree(root, depths, major, path, fmt=None, common_names=None, dpi=None):
         if node.eaten and common_names.get(node.value):
             text += f" ({common_names[node.value]})"
         labelled.append((node, x, y, text))
-    # Each depth step is made wide enough that every name fits on its own branch
-    unit = 60.0 if major else 30.0
-    for node, x, y, text in labelled:
-        unit = max(unit, (text_width(text, LABEL_SIZE) + 8) / (x - parent_x[id(node)]))
+    # Depth steps are sized from the labels, and depths become x positions in points
+    widths = step_widths(max_depth, [(parent_x[id(node)], x, text_width(text, LABEL_SIZE) + 8)
+                                     for node, x, y, text in labelled])
+    position = [sum(widths[:depth + 1]) for depth in range(max_depth + 1)]
     leaf_texts = {}
     for node, x, y, children in placed:
         if not children:
             common = common_names.get(node.value)
             leaf_texts[id(node)] = (node.value, f"({common})" if common else "")
-    right_points = max(text_width(name, LEAF_SIZE, "italic") + 4 + text_width(common, LEAF_SIZE)
+    right_points = max(text_width(name, LEAF_SIZE, "italic") + 6 + text_width(common, LEAF_SIZE)
                        for name, common in leaf_texts.values()) + 20
     left_points = text_width(root.value, LABEL_SIZE) + 16
-    width = left_points + (max_depth - placed[-1][1]) * unit + right_points
+    width = left_points + position[max_depth] + right_points
     height = (leaf_count + 3.5) * ROW_HEIGHT
 
     fig = plt.figure(figsize=(width / 72, height / 72))
     ax = fig.add_axes([0, 0, 1, 1])
-    ax.set_xlim(placed[-1][1] - left_points / unit, max_depth + right_points / unit)
+    ax.set_xlim(-left_points, position[max_depth] + right_points)
     ax.set_ylim(leaf_count, -3.0)
     ax.axis("off")
 
     for node, x, y, children in placed:
         if children:
-            ax.plot([x, x], [children[0][2], children[-1][2]], color="#555555", linewidth=0.8)
+            ax.plot([position[x]] * 2, [children[0][2], children[-1][2]], color="#555555", linewidth=0.8)
             for _, child_x, child_y, _ in children:
-                ax.plot([x, child_x], [child_y, child_y], color="#555555", linewidth=0.8)
+                ax.plot([position[x], position[child_x]], [child_y, child_y], color="#555555", linewidth=0.8)
         else:
             name, common = leaf_texts[id(node)]
-            ax.annotate(name, (x, y), xytext=(4, 0), textcoords="offset points",
+            ax.annotate(name, (position[x], y), xytext=(4, 0), textcoords="offset points",
                         ha="left", va="center", fontsize=LEAF_SIZE, style="italic")
             if common:
-                ax.annotate(common, (x, y), xytext=(8 + text_width(name, LEAF_SIZE, "italic"), 0),
+                ax.annotate(common, (position[x], y), xytext=(10 + text_width(name, LEAF_SIZE, "italic"), 0),
                             textcoords="offset points", ha="left", va="center", fontsize=LEAF_SIZE, color="#555555")
     for node, x, y, text in labelled:
         # Ranked clades in dark text, unranked clades lighter
-        ax.annotate(text, (x, y), xytext=(-3, 2), textcoords="offset points", ha="right", va="bottom",
+        ax.annotate(text, (position[x], y), xytext=(-3, 2), textcoords="offset points", ha="right", va="bottom",
                     fontsize=LABEL_SIZE, color="#222222" if node.code or node.eaten else "#888888")
     _, root_x, root_y, _ = placed[-1]
-    ax.annotate(root.value, (root_x, root_y), xytext=(-4, 0), textcoords="offset points",
+    ax.annotate(root.value, (position[root_x], root_y), xytext=(-4, 0), textcoords="offset points",
                 ha="right", va="center", fontsize=LABEL_SIZE, color="#222222")
 
     # Column headings for the aligned major ranks, angled so close ranks don't overlap
     rank_depths = {code: RANK_ORDER.index(code) + 1 for code in RANK_ORDER} if major else depths
     for code, x in rank_depths.items():
-        ax.text(x, -1.2, RANK_NAMES[code], ha="left", va="bottom", rotation=35, fontsize=7, color="#777777")
-        ax.axvline(x, color="#dddddd", linewidth=0.5, zorder=0)
+        ax.text(position[x], -1.2, RANK_NAMES[code], ha="left", va="bottom", rotation=35,
+                fontsize=HEADING_SIZE, color="#777777")
+        ax.axvline(position[x], color="#dddddd", linewidth=0.5, zorder=0)
     fig.savefig(path, format=fmt, dpi=dpi)
     plt.close(fig)
 

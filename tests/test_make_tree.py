@@ -185,6 +185,17 @@ class TreeTests(unittest.TestCase):
         self.assertIn("Fo'o", names)
         self.assertIn("Avena sativa", {name for name, _, _, _ in walk(parse_newick(major))})
 
+    def test_step_widths_fit_every_label_without_widening_other_steps(self):
+        spans = [(0, 1, 50.0), (1, 3, 100.0), (3, 4, 5.0), (0, 4, 40.0)]
+        widths = make_tree.step_widths(5, spans)
+        for start, end, need in spans:
+            self.assertGreaterEqual(sum(widths[start + 1:end + 1]) + 1e-9, need)
+        # Steps no label needs stay at the minimum
+        self.assertEqual(widths[4], make_tree.MIN_STEP)
+        self.assertEqual(widths[5], make_tree.MIN_STEP)
+        # The two-step label is shared across both of its steps
+        self.assertAlmostEqual(widths[2], widths[3])
+
     def test_leaf_common_names_come_from_file_names(self):
         write_folder(self.folder, {"american_clawed_lobster.txt": HUMAN, "apple.txt": APPLE, "apple_2.txt": APPLE})
         self.assertEqual(make_tree.leaf_common_names(self.folder),
