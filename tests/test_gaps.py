@@ -52,6 +52,28 @@ class GapTests(unittest.TestCase):
         self.assertEqual(hidden, 0)
         self.assertEqual(gaps.describe(shown[0]), "Rodentia (rodents): e.g. guinea pig")
 
+    def test_species_report_lists_common_foods_not_eaten(self):
+        saved = gaps.common_foods_path
+        gaps.common_foods_path = os.path.join(self.tmp.name, "common_foods.tsv")
+        try:
+            with open(gaps.common_foods_path, 'w') as f:
+                f.write("# comment\n"
+                        "apple\tMalus domestica\tEukaryota; Rosales; Malus; Malus domestica\n"
+                        "quince\tCydonia oblonga\tEukaryota; Rosales; Cydonia; Cydonia oblonga\n"
+                        "kohlrabi\tBrassica oleracea var. gongylodes\tEukaryota; Brassicales; Brassica; "
+                        "Brassica oleracea; Brassica oleracea var. gongylodes\n"
+                        "wild cabbage\tBrassica oleracea\tEukaryota; Brassicales; Brassica; Brassica oleracea\n")
+            report = gaps.species_report(self.root, "Rosales")
+            self.assertEqual([entry["common"] for entry in report["have"]], ["apple"])
+            self.assertEqual([entry["common"] for entry in report["missing"]], ["quince"])
+            # The broccoli sample puts Brassica oleracea in the tree, so the species counts as
+            # eaten, but the kohlrabi variety doesn't
+            report = gaps.species_report(self.root, "Brassicales")
+            self.assertEqual([entry["common"] for entry in report["have"]], ["wild cabbage"])
+            self.assertEqual([entry["common"] for entry in report["missing"]], ["kohlrabi"])
+        finally:
+            gaps.common_foods_path = saved
+
     def test_describe(self):
         self.assertEqual(gaps.describe(MAMMAL_ORDERS[1]), "Carnivora (carnivores)")
         self.assertEqual(gaps.describe({"name": "Pilosa", "common": ""}), "Pilosa")

@@ -8,11 +8,16 @@ import sys
 import fetch_lineage
 import make_tree
 
-# Coarse ranks only: NCBI doesn't know what's edible, so finer gaps are mostly noise
-GAP_RANKS = ["kingdom", "phylum", "class", "order", "family"]
-RANK_CODES = {"kingdom": "K", "phylum": "P", "class": "C", "order": "O", "family": "F"}
-PLURALS = {"kingdom": "kingdoms", "phylum": "phyla", "class": "classes", "order": "orders", "family": "families"}
+# Kingdom to genus come from NCBI's lists of groups. "species" (species, subspecies and
+# varieties) comes from common_foods.tsv instead: NCBI's species lists are mostly organisms
+# nobody eats, many of them unnamed samples.
+GAP_RANKS = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
+RANK_CODES = {"kingdom": "K", "phylum": "P", "class": "C", "order": "O", "family": "F", "genus": "G"}
+PLURALS = {"kingdom": "kingdoms", "phylum": "phyla", "class": "classes", "order": "orders", "family": "families",
+           "genus": "genera", "species": "common species and varieties"}
 BATCH = 200
+# Larger NCBI lists (e.g. every plant genus) take too long to download; ask for a smaller group
+MAX_GROUPS = 20000
 
 cache_dir = os.path.join(make_tree.script_dir, ".ncbi_cache")
 # Commonly eaten species with their NCBI lineages ("food<TAB>species<TAB>lineage; ..."),
@@ -74,8 +79,16 @@ def ncbi_groups(taxid, rank, refresh):
         with open(cache_path, 'r') as f:
             return json.load(f)
     term = f"txid{taxid}[Subtree] AND {rank}[Rank]"
-    result = json.loads(fetch_lineage.ncbi_get("esearch.fcgi", {"term": term, "retmax": 10000, "retmode": "json"}))
-    ids = result["esearchresult"]["idlist"]
+    count = int(json.loads(fetch_lineage.ncbi_get("esearch.fcgi", {"term": term, "retmax": 0, "retmode": "json"}))
+                ["esearchresult"]["count"])
+    if count > MAX_GROUPS:
+        raise fetch_lineage.FetchError(f"NCBI lists {count} {PLURALS[rank]} in this group; choose a smaller group "
+                                       f"(e.g. an order or family) or a coarser rank")
+    ids = []
+    for start in range(0, count, 10000):
+        result = json.loads(fetch_lineage.ncbi_get("esearch.fcgi", {"term": term, "retstart": start,
+                                                                    "retmax": 10000, "retmode": "json"}))
+        ids += result["esearchresult"]["idlist"]
     groups = [{"name": s["scientificname"], "common": s.get("commonname", "")}
               for s in ncbi_summaries(ids) if s.get("rank") == rank]
     groups.sort(key=lambda group: group["name"])
@@ -120,6 +133,32 @@ def filter_missing(missing, edible, show_all):
             shown.append(dict(group, examples=examples[:EXAMPLES]))
     return shown, len(missing) - len(shown)
 
+def tree_names(root):
+    names = set()
+    stack = [root]
+    while stack:
+        node = stack.pop()
+        names.add(node.value.lower())
+        stack.extend(node.children.values())
+    return names
+
+def species_report(root, name):
+    # The common foods (species, subspecies, varieties) inside the taxon, split into eaten
+    # and not. A food counts as eaten when its taxon is in the tree: every node in the tree
+    # leads to an organism eaten, so a species above an eaten subspecies counts too.
+    foods = load_common_foods()
+    if not foods:
+        raise fetch_lineage.FetchError("species gaps need common_foods.tsv (run update_common_foods.py)")
+    in_tree = tree_names(root)
+    have, missing = [], []
+    for food, species, lineage in sorted(foods, key=lambda entry: entry[1]):
+        if name.lower() not in (taxon.lower() for taxon in lineage):
+            continue
+        entry = {"name": species, "common": food}
+        (have if species.lower() in in_tree else missing).append(entry)
+    return {"name": name, "rank": "species", "groups": have + missing, "have": have, "missing": missing,
+            "hidden": 0, "filtered": False, "unknown": []}
+
 def gap_report(root, taxon, rank=None, refresh=False, show_all=False):
     # Returns {"name", "rank", "groups", "have", "missing", "hidden", "filtered", "unknown"}
     # for taxon; rank defaults to the next major rank below the taxon's. "missing" only
@@ -130,12 +169,14 @@ def gap_report(root, taxon, rank=None, refresh=False, show_all=False):
             raise fetch_lineage.FetchError(f"'{name}' has rank '{taxon_rank}'; choose a rank")
         index = GAP_RANKS.index(taxon_rank) + 1
         if index == len(GAP_RANKS):
-            raise fetch_lineage.FetchError(f"'{name}' is a family; gaps are only listed down to families")
+            raise fetch_lineage.FetchError(f"'{name}' is a species; gaps are only listed down to species")
         rank = GAP_RANKS[index]
     elif rank not in GAP_RANKS:
         raise fetch_lineage.FetchError(f"rank must be one of: {', '.join(GAP_RANKS)}")
     elif taxon_rank in GAP_RANKS and GAP_RANKS.index(rank) <= GAP_RANKS.index(taxon_rank):
         raise fetch_lineage.FetchError(f"'{name}' is a {taxon_rank}; choose a rank below it")
+    if rank == "species":
+        return species_report(root, name)
     groups = ncbi_groups(taxid, rank, refresh)
     have, missing, unknown = compare(eaten_groups(root, name, rank), groups)
     foods = load_common_foods()

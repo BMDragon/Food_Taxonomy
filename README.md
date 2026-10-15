@@ -42,7 +42,7 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 
 `python3 make_tree.py --draw tree.svg` draws the tree to an image (`.svg`, `.png` or `.pdf`), with the major ranks lined up in columns. Add `--major-only` to draw the simpler tree. Drawing needs matplotlib (`pip install --user -r requirements.txt`); nothing else does.
 
-`python3 gaps.py Mammalia` lists the groups one rank down (here, orders of mammals) and which of them you haven't eaten yet, using NCBI Taxonomy. Use `--rank` to choose another rank (kingdom to family), e.g. `python3 gaps.py Viridiplantae --rank order`. NCBI results are cached in `.ncbi_cache/`; `--refresh` fetches them again.
+`python3 gaps.py Mammalia` lists the groups one rank down (here, orders of mammals) and which of them you haven't eaten yet, using NCBI Taxonomy. Use `--rank` to choose another rank, from kingdom down to genus, or `species` for species and varieties, e.g. `python3 gaps.py Viridiplantae --rank order` or `python3 gaps.py Rosaceae --rank species`. The species level lists the common foods (from `common_foods.tsv`) in the group that you haven't eaten yet; a genus defaults to it. NCBI results are cached in `.ncbi_cache/`; `--refresh` fetches them again.
 
 By default, "not eaten yet" only lists groups that contain at least one commonly eaten species from `common_foods.tsv` (about 580 foods worldwide), each with up to three example foods, e.g. "Rodentia (rodents): e.g. guinea pig, capybara". `--all` (or the website's "Include groups with no common foods" box) lists every group. To extend the food list, add a line `food<TAB>scientific name` to `common_foods.tsv` and run `python3 update_common_foods.py`, which looks up the lineage on NCBI.
 

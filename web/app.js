@@ -197,7 +197,7 @@ async function loadTree() {
   // Ranked names (kingdom to order) as suggestions for the gaps form
   const options = [];
   const collect = (node) => {
-    if ("KPCO".includes(node.code) && node.code) options.push(node.name);
+    if ("KPCOFG".includes(node.code) && node.code) options.push(node.name);
     node.children.forEach(collect);
   };
   collect(treeData.tree);
