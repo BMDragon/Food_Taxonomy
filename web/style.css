@@ -117,6 +117,7 @@ a { color: var(--accent); }
 .tree .name { font-weight: 600; }
 .tree .sci { font-style: italic; }
 .tree.full ul { padding-left: .75rem; }
+.tree .meaning { color: var(--text-secondary); margin-left: .35rem; }
 .tree .rank, .tree .count, .tree .food { color: var(--text-muted); font-size: .85em; margin-left: .45rem; }
 .tree .rank { text-transform: uppercase; letter-spacing: .04em; font-size: .72em; }
 .tree .food { color: var(--text-secondary); }

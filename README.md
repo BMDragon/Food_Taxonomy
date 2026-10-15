@@ -5,7 +5,7 @@ Taxonomy of things I can remember consuming
 
 `python3 serve.py` starts a local website and prints a link like `http://localhost:8765/?token=...`. Open that link (the token keeps other users of a shared machine out). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
 
-- **Tree**: the whole tree, collapsible and searchable by taxon or food name; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` and the cladogram PNGs (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
+- **Tree**: the whole tree, collapsible and searchable by taxon, food name or meaning; each clade shows what its name means, e.g. "Tetrapoda (four-legged)"; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` and the cladogram PNGs (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
 - **Cladogram**: the drawn tree (needs matplotlib).
 - **Stats**: organism and taxon counts, overall and by kingdom.
 - **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` and the cladogram PNGs are rebuilt automatically. Commit the new file afterwards.
@@ -29,6 +29,8 @@ python3 fetch_lineage.py apple="Malus domestica" "Brassica oleracea var. capitat
 - Set the `NCBI_API_KEY` environment variable to use an NCBI API key (optional; raises the request limit from 3 to 10 per second).
 
 Organisms NCBI doesn't list (e.g. `Homo sapiens sapiens`) can still be added by hand.
+
+The meanings shown on the website are in `taxon_meanings.tsv` (one `name<TAB>meaning` line per taxon). Edit it freely. When `fetch_lineage.py` or the website adds an organism, any new taxa without a meaning get NCBI's common name where NCBI has one; existing entries are never overwritten.
 
 Generates a cladogram file (`taxon_tree.txt`) in the Newick format, for upload into https://cladogrammaker.com/, draws the major-ranks cladogram to `cladogram.png`, and draws the full cladogram with every clade to `cladogram_full.png` (both need matplotlib). Both are regenerated whenever organisms are added or removed through the website or `fetch_lineage.py`; after editing or deleting files by hand, run `python3 make_tree.py`.
 

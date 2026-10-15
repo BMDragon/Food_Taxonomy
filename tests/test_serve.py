@@ -25,11 +25,15 @@ class ServerTests(unittest.TestCase):
         self.folder = os.path.join(self.tmp.name, "taxonomy_files")
         os.mkdir(self.folder)
         write_folder(self.folder, SAMPLE)
-        self.saved = (make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, make_tree.cladogram_full_path, fetch_lineage.taxonomy_dir)
+        self.saved = (make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, make_tree.cladogram_full_path,
+                      make_tree.meanings_path, fetch_lineage.taxonomy_dir, fetch_lineage.fill_meanings)
         make_tree.taxonomy_dir = fetch_lineage.taxonomy_dir = self.folder
         make_tree.output_path = os.path.join(self.tmp.name, "taxon_tree.txt")
         make_tree.cladogram_path = os.path.join(self.tmp.name, "cladogram.png")
         make_tree.cladogram_full_path = os.path.join(self.tmp.name, "cladogram_full.png")
+        make_tree.meanings_path = os.path.join(self.tmp.name, "taxon_meanings.tsv")
+        # Saving would otherwise ask NCBI for the new taxa's common names
+        fetch_lineage.fill_meanings = lambda text: {}
         serve.Handler.token = TOKEN
         self.server = serve.ThreadingHTTPServer(("127.0.0.1", 0), serve.Handler)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -38,7 +42,8 @@ class ServerTests(unittest.TestCase):
     def tearDown(self):
         self.server.shutdown()
         self.server.server_close()
-        make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, make_tree.cladogram_full_path, fetch_lineage.taxonomy_dir = self.saved
+        (make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, make_tree.cladogram_full_path,
+         make_tree.meanings_path, fetch_lineage.taxonomy_dir, fetch_lineage.fill_meanings) = self.saved
         self.tmp.cleanup()
 
     def request(self, path, body=None, token=TOKEN):
@@ -71,9 +76,25 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(data["tree"]["name"], "Eukaryota")
         self.assertEqual(data["warnings"], [])
         self.assertEqual(sorted(name for files in data["files"].values() for name in files), sorted(SAMPLE))
-        self.assertTrue(os.path.exists(make_tree.output_path))
+        # Viewing the tree reads the files only; outputs are rebuilt when organisms change
+        self.assertFalse(os.path.exists(make_tree.output_path))
+        self.assertFalse(os.path.exists(make_tree.cladogram_path))
         stats = json.loads(self.request("/api/stats")[1])
         self.assertEqual(stats["totals"]["organisms"], len(SAMPLE))
+
+    def test_tree_includes_taxon_meanings(self):
+        with open(make_tree.meanings_path, 'w') as f:
+            f.write("Chordata\tchordates\nRosids\trose-like flowering plants\n")
+        tree = json.loads(self.request("/api/tree")[1])["tree"]
+        found = {}
+        def walk(node):
+            found[node["name"]] = node["meaning"]
+            for child in node["children"]:
+                walk(child)
+        walk(tree)
+        self.assertEqual(found["Chordata"], "chordates")
+        self.assertEqual(found["Rosids"], "rose-like flowering plants")
+        self.assertIsNone(found["Metazoa"])
 
     def test_save_cleans_the_file_name(self):
         pear = APPLE[:-2] + ["Pyrus; G", "Pyrus communis; S"]

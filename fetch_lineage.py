@@ -179,6 +179,34 @@ def prepare(name, filename=None, force=False):
     return {"filename": filename, "text": format_lineage(lineage, spellings),
             "ncbi_name": ncbi_name, "taxid": taxid, "note": note}
 
+def fill_meanings(text):
+    # Gives taxa in a newly written lineage that have no meaning yet the NCBI common
+    # name, where NCBI has one. The organism itself (the last line) is skipped; it
+    # is named by its file. Returns the meanings added.
+    import make_tree
+    names = [line.partition(';')[0].strip() for line in text.splitlines() if line.strip()][:-1]
+    known = make_tree.load_meanings()
+    missing = [name for name in names if name not in known]
+    if not missing:
+        return {}
+    ids = {}
+    for name in missing:
+        # "Cornu (subgenus)" is searched as "Cornu"
+        query = re.sub(r" \([a-z ]+\)$", "", name)
+        found = search(query, "Scientific Name")
+        if len(found) == 1:
+            ids[found[0]] = name
+    new = {}
+    if ids:
+        for taxon in fetch_taxa(list(ids)):
+            other_names = taxon.find("OtherNames")
+            if other_names is None:
+                continue
+            commons = [e.text for tag in ("GenbankCommonName", "CommonName") for e in other_names.findall(tag) if e.text]
+            if commons:
+                new[ids[taxon.findtext("TaxId")]] = commons[0]
+    return make_tree.add_meanings(new)
+
 def save(filename, text, force=False):
     filename = clean_filename(filename)
     path = os.path.join(taxonomy_dir, filename)
@@ -198,6 +226,12 @@ def process(arg, args):
         return
     save(result["filename"], result["text"], args.force)
     print(f"wrote {result['filename']} ({result['ncbi_name']}, taxid {result['taxid']})")
+    try:
+        added = fill_meanings(result["text"])
+    except FetchError:
+        added = {}
+    if added:
+        print("  new taxon meanings from NCBI: " + ", ".join(f"{name} ({meaning})" for name, meaning in added.items()))
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch lineages from NCBI Taxonomy into taxonomy_files/.")

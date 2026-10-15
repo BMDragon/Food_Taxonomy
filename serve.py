@@ -23,9 +23,9 @@ ncbi_lock = threading.Lock()
 # Building and writing the tree touches taxonomy_files/ and taxon_tree.txt
 files_lock = threading.Lock()
 
-def node_json(node):
-    return {"name": node.value, "code": node.code, "eaten": node.eaten,
-            "children": [node_json(child) for child in node.children.values()]}
+def node_json(node, meanings):
+    return {"name": node.value, "code": node.code, "eaten": node.eaten, "meaning": meanings.get(node.value),
+            "children": [node_json(child, meanings) for child in node.children.values()]}
 
 def leaf_files():
     # Maps each file's last entry to its file name, so the page can show both
@@ -129,10 +129,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"error": str(e)}, 400)
 
     def api_tree(self, query, body):
+        # Only reads the files; taxon_tree.txt and the PNGs are rebuilt when organisms change
         with files_lock:
-            root, warnings, depths = rebuild()
+            root, warnings = make_tree.build_tree(make_tree.taxonomy_dir)
             files = leaf_files()
-        self.send_json({"tree": node_json(root), "warnings": warnings, "files": files,
+        self.send_json({"tree": node_json(root, make_tree.load_meanings()), "warnings": warnings, "files": files,
                         "ranks": list(make_tree.RANK_ORDER), "rankNames": make_tree.RANK_NAMES})
 
     def api_stats(self, query, body):
@@ -192,6 +193,12 @@ class Handler(BaseHTTPRequestHandler):
                 os.remove(os.path.join(make_tree.taxonomy_dir, filename))
                 rebuild()
                 raise ApiError(f"{filename} was not saved: {e}")
+        # New taxa get NCBI's common name as their meaning, where it has one
+        try:
+            with ncbi_lock:
+                fetch_lineage.fill_meanings(text)
+        except fetch_lineage.FetchError:
+            pass
         self.send_json({"filename": filename, "warnings": warnings})
 
     def api_remove(self, query, body):

@@ -185,6 +185,20 @@ class TreeTests(unittest.TestCase):
         self.assertIn("Fo'o", names)
         self.assertIn("Avena sativa", {name for name, _, _, _ in walk(parse_newick(major))})
 
+    def test_meanings_load_and_add_without_overwriting(self):
+        saved = make_tree.meanings_path
+        make_tree.meanings_path = os.path.join(self.folder, "taxon_meanings.tsv")
+        try:
+            with open(make_tree.meanings_path, 'w') as f:
+                f.write("# comment\nTetrapoda\tfour-legged\nMammalia\tmammals\n")
+            self.assertEqual(make_tree.load_meanings(), {"Tetrapoda": "four-legged", "Mammalia": "mammals"})
+            added = make_tree.add_meanings({"Mammalia": "something else", "Aves": "birds", "Empty": ""})
+            self.assertEqual(added, {"Aves": "birds"})
+            self.assertEqual(make_tree.load_meanings(),
+                             {"Tetrapoda": "four-legged", "Mammalia": "mammals", "Aves": "birds"})
+        finally:
+            make_tree.meanings_path = saved
+
     def test_human_is_the_last_row(self):
         # HUMAN is written to the folder first (so read first), yet must come out last
         write_folder(self.folder, {"a_human.txt": HUMAN, "b_chicken.txt": CHICKEN, "c_apple.txt": APPLE,

@@ -28,6 +28,30 @@ class FormatTests(unittest.TestCase):
         self.assertEqual(fetch_lineage.format_lineage(lineage, {}),
                          "Eukaryota; \nHelicidae; F\nCornu; G\nCornu (subgenus); \nCornu aspersum; S")
 
+    def test_fill_meanings_adds_ncbi_common_names_for_new_taxa_only(self):
+        import tempfile
+        import xml.etree.ElementTree as ET
+        import make_tree
+        saved = (make_tree.meanings_path, fetch_lineage.search, fetch_lineage.fetch_taxa)
+        taxids = {"Mammalia": "40674", "Theria": "32525", "Primates": "9443"}
+        common = {"40674": "mammals", "32525": "", "9443": "primates"}
+        def fake_taxa(ids):
+            return [ET.fromstring(f"<Taxon><TaxId>{i}</TaxId><OtherNames>"
+                                  + (f"<GenbankCommonName>{common[i]}</GenbankCommonName>" if common[i] else "")
+                                  + "</OtherNames></Taxon>") for i in ids]
+        with tempfile.TemporaryDirectory() as folder:
+            make_tree.meanings_path = os.path.join(folder, "taxon_meanings.tsv")
+            with open(make_tree.meanings_path, 'w') as f:
+                f.write("Primates\tprimate order\n")
+            fetch_lineage.search = lambda name, field: [taxids[name]] if name in taxids else []
+            fetch_lineage.fetch_taxa = fake_taxa
+            try:
+                added = fetch_lineage.fill_meanings("Mammalia; C\nTheria; \nPrimates; O\nHomo sapiens; S")
+                self.assertEqual(added, {"Mammalia": "mammals"})
+                self.assertEqual(make_tree.load_meanings(), {"Primates": "primate order", "Mammalia": "mammals"})
+            finally:
+                make_tree.meanings_path, fetch_lineage.search, fetch_lineage.fetch_taxa = saved
+
     def test_clean_filename(self):
         self.assertEqual(fetch_lineage.clean_filename("../Pear Tree.txt"), "pear_tree.txt")
         with self.assertRaises(fetch_lineage.FetchError):

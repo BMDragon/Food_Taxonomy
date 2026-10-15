@@ -38,6 +38,30 @@ stats_path = os.path.join(script_dir, "stats.md")
 # every clade (very wide, so drawn at a lower resolution)
 cladogram_path = os.path.join(script_dir, "cladogram.png")
 cladogram_full_path = os.path.join(script_dir, "cladogram_full.png")
+# Plain-English meanings of taxon names ("Tetrapoda<TAB>four-legged"), shown on the website
+meanings_path = os.path.join(script_dir, "taxon_meanings.tsv")
+
+def load_meanings():
+    meanings = {}
+    if os.path.exists(meanings_path):
+        with open(meanings_path, 'r') as f:
+            for line in f:
+                if line.strip() and not line.startswith('#'):
+                    name, _, meaning = line.rstrip('\n').partition('\t')
+                    if meaning.strip():
+                        meanings[name.strip()] = meaning.strip()
+    return meanings
+
+def add_meanings(new):
+    # Adds meanings for taxa that don't have one yet; existing entries are never changed
+    meanings = load_meanings()
+    added = {name: meaning for name, meaning in new.items() if name not in meanings and meaning}
+    if added:
+        meanings.update(added)
+        with open(meanings_path, 'w') as f:
+            for name in sorted(meanings, key=str.lower):
+                f.write(f"{name}\t{meanings[name]}\n")
+    return added
 CLADOGRAM_DPI = 120
 CLADOGRAM_FULL_DPI = 100
 

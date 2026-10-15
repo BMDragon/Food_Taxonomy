@@ -17,7 +17,7 @@ function el(tag, attrs, ...children) {
     else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
     else node.setAttribute(key, value === true ? "" : value);
   }
-  for (const child of children.flat()) {
+  for (const child of children.flat(Infinity)) {
     if (child === null || child === undefined || child === false) continue;
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
@@ -113,13 +113,12 @@ function majorOnly(node) {
 // Does the node or anything below it match the search?
 function matches(node, query, files) {
   if (!query) return true;
-  const own = [node.name, ...(files[node.name] || []).map(foodName)];
-  if (own.some((text) => text.toLowerCase().includes(query))) return true;
-  return node.children.some((child) => matches(child, query, files));
+  return selfMatches(node, query, files) || node.children.some((child) => matches(child, query, files));
 }
 
+// Matches the scientific name, its meaning ("four-legged") or a food name
 function selfMatches(node, query, files) {
-  const own = [node.name, ...(files[node.name] || []).map(foodName)];
+  const own = [node.name, node.meaning || "", ...(files[node.name] || []).map(foodName)];
   return own.some((text) => text.toLowerCase().includes(query));
 }
 
@@ -152,6 +151,7 @@ function renderNode(node, query, files, showAll) {
       el("summary", {},
         node.code === "K" ? el("span", { class: "kdot", "aria-hidden": "true" }) : null,
         el("span", { class: node.code ? "name" : "" }, highlight(node.name, query)),
+        node.meaning ? el("span", { class: "meaning" }, "(", highlight(node.meaning, query), ")") : null,
         rankName ? el("span", { class: "rank" }, rankName) : null,
         // A species eaten itself, with a variety or subspecies below it (onion above shallot)
         node.eaten ? foodParts(node, query, files) : null,
