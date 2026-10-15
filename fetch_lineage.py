@@ -111,7 +111,14 @@ def read_existing():
 
 def format_lineage(lineage, spellings):
     lines = []
+    previous = None
     for i, (name, rank) in enumerate(lineage):
+        if name == previous:
+            # A taxon named like the one above it, such as the subgenus Cornu in
+            # the genus Cornu, gets its rank added so the two stay distinguishable
+            previous, name = name, f"{name} ({rank})"
+        else:
+            previous = name
         name = spellings.get(name.lower(), name[0].upper() + name[1:])
         code = RANK_CODES.get(rank, '')
         if i == len(lineage) - 1 and code == '':
