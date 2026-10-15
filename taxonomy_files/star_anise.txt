@@ -1,0 +1,13 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Austrobaileyales; O
+Schisandraceae; F
+Illicium; G
+Illicium verum; S

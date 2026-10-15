@@ -1,0 +1,15 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Magnoliidae; 
+Laurales; O
+Lauraceae; F
+Persea; G
+Persea americana; S

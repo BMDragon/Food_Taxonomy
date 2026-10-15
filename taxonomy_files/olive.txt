@@ -1,0 +1,21 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Asterids; 
+Lamiids; 
+Lamiales; O
+Oleaceae; F
+Oleeae; 
+Olea; G
+Olea europaea; S
+Olea europaea subsp. europaea

@@ -1,0 +1,7 @@
+Eukaryota; 
+Rhodophyta; P
+Bangiophyceae; C
+Bangiales; O
+Bangiaceae; F
+Pyropia; G
+Pyropia yezoensis; S

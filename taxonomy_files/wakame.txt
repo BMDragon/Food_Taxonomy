@@ -1,0 +1,10 @@
+Eukaryota; 
+Sar; 
+Stramenopiles; 
+Ochrophyta; 
+PX clade; 
+Phaeophyceae; C
+Laminariales; O
+Alariaceae; F
+Undaria; G
+Undaria pinnatifida; S

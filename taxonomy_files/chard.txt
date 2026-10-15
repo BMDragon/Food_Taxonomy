@@ -1,0 +1,19 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Caryophyllales; O
+Amaranthaceae; F
+Betoideae; 
+Beta; G
+Beta vulgaris; S
+Beta vulgaris subsp. cicla

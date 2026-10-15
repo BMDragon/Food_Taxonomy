@@ -1,0 +1,20 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Fabids; 
+Cucurbitales; O
+Cucurbitaceae; F
+Benincaseae; 
+Citrullus; G
+Citrullus lanatus; S

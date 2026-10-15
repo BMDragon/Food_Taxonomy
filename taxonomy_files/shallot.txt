@@ -1,0 +1,19 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Asparagales; O
+Amaryllidaceae; F
+Allioideae; 
+Allieae; 
+Allium; G
+Allium cepa; S
+Allium cepa var. aggregatum

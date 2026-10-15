@@ -1,0 +1,22 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Asterids; 
+Lamiids; 
+Solanales; O
+Solanaceae; F
+Solanoideae; 
+Solaneae; 
+Solanum; G
+Solanum subgen. Lycopersicon; 
+Solanum lycopersicum; S

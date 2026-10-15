@@ -1,0 +1,22 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Asterids; 
+Lamiids; 
+Lamiales; O
+Lamiaceae; F
+Nepetoideae; 
+Mentheae; 
+Menthinae; 
+Mentha; G
+Mentha spicata; S

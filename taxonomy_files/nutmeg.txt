@@ -1,0 +1,15 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Magnoliidae; 
+Magnoliales; O
+Myristicaceae; F
+Myristica; G
+Myristica fragrans; S

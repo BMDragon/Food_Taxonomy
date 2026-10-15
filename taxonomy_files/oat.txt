@@ -1,0 +1,23 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Commelinids; 
+Poales; O
+Poaceae; F
+BOP clade; 
+Pooideae; 
+Poodae; 
+Poeae; 
+Poeae Chloroplast Group 1 (Aveneae type); 
+Aveninae; 
+Avena; G
+Avena sativa; S

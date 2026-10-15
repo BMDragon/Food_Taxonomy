@@ -1,0 +1,17 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Commelinids; 
+Zingiberales; O
+Zingiberaceae; F
+Alpinia; G
+Alpinia galanga; S

@@ -1,0 +1,25 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Asterids; 
+Campanulids; 
+Apiales; O
+Apiineae; 
+Apiaceae; F
+Apioideae; 
+Scandiceae; 
+Daucinae; 
+Daucus; G
+Daucus sect. Daucus; 
+Daucus carota; S
+Daucus carota subsp. sativus

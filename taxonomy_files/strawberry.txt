@@ -1,0 +1,22 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Fabids; 
+Rosales; O
+Rosaceae; F
+Rosoideae; 
+Potentilleae; 
+Fragariinae; 
+Fragaria; G
+Fragaria x ananassa; S

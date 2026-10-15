@@ -1,0 +1,18 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Commelinids; 
+Poales; O
+Bromeliaceae; F
+Bromelioideae; 
+Ananas; G
+Ananas comosus; S

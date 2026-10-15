@@ -1,0 +1,22 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Fabids; 
+Cucurbitales; O
+Cucurbitaceae; F
+Benincaseae; 
+Cucumis; G
+Cucumis melo; S
+Cucumis melo subsp. melo; 
+Cucumis melo var. inodorus
