@@ -1,0 +1,12 @@
+Eukaryota; 
+Opisthokonta; 
+Fungi; K
+Dikarya; 
+Ascomycota; P
+Saccharomyceta; 
+Pezizomycotina; 
+Pezizomycetes; C
+Pezizales; O
+Tuberaceae; F
+Tuber; G
+Tuber aestivum; S

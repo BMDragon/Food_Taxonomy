@@ -1,0 +1,15 @@
+Eukaryota; 
+Opisthokonta; 
+Fungi; K
+Dikarya; 
+Ascomycota; P
+Saccharomyceta; 
+Pezizomycotina; 
+Leotiomyceta; 
+Eurotiomycetes; C
+Eurotiomycetidae; 
+Eurotiales; O
+Aspergillaceae; F
+Aspergillus; G
+Aspergillus subgen. Circumdati; 
+Aspergillus oryzae; S

@@ -1,0 +1,31 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Osteoglossocephalai; 
+Clupeocephala; 
+Euteleosteomorpha; 
+Neoteleostei; 
+Eurypterygia; 
+Ctenosquamata; 
+Acanthomorphata; 
+Paracanthopterygii; 
+Zeiogadaria; 
+Gadariae; 
+Gadiformes; O
+Gadoidei; 
+Gadidae; F
+Gadus; G
+Gadus chalcogrammus; S

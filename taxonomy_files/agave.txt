@@ -1,0 +1,17 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Asparagales; O
+Asparagaceae; F
+Agavoideae; 
+Agave; G
+Agave tequilana; S

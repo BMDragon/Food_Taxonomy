@@ -1,0 +1,19 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Fabids; 
+Malpighiales; O
+Passifloraceae; F
+Passiflora; G
+Passiflora edulis; S

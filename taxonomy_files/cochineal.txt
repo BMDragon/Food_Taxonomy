@@ -1,0 +1,26 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Ecdysozoa; 
+Panarthropoda; 
+Arthropoda; P
+Mandibulata; 
+Pancrustacea; 
+Altocrustacea; 
+Allotriocarida; 
+Hexapoda; 
+Insecta; C
+Dicondylia; 
+Pterygota; 
+Neoptera; 
+Eumetabola; 
+Paraneoptera; 
+Hemiptera; O
+Sternorrhyncha; 
+Coccoidea; 
+Dactylopiidae; F
+Dactylopius; G
+Dactylopius coccus; S

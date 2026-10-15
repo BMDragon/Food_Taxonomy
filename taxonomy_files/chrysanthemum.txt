@@ -1,0 +1,22 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Asterids; 
+Campanulids; 
+Asterales; O
+Asteraceae; F
+Asteroideae; 
+Anthemideae; 
+Artemisiinae; 
+Chrysanthemum; G
+Chrysanthemum x morifolium; S

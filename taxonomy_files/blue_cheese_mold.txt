@@ -1,0 +1,14 @@
+Eukaryota; 
+Opisthokonta; 
+Fungi; K
+Dikarya; 
+Ascomycota; P
+Saccharomyceta; 
+Pezizomycotina; 
+Leotiomyceta; 
+Eurotiomycetes; C
+Eurotiomycetidae; 
+Eurotiales; O
+Aspergillaceae; F
+Penicillium; G
+Penicillium roqueforti; S

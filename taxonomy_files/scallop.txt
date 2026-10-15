@@ -1,0 +1,17 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Bivalvia; C
+Autobranchia; 
+Pteriomorphia; 
+Pectinida; O
+Pectinoidea; 
+Pectinidae; F
+Placopecten; G
+Placopecten magellanicus; S

@@ -1,0 +1,21 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Fabids; 
+Cucurbitales; O
+Cucurbitaceae; F
+Cucurbiteae; 
+Cucurbita; G
+Cucurbita melopepo; S
+Cucurbita melopepo subsp. melopepo

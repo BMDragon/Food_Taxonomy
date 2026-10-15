@@ -1,0 +1,20 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Commelinids; 
+Arecales; O
+Arecaceae; F
+Arecoideae; 
+Cocoseae; 
+Elaeidinae; 
+Elaeis; G
+Elaeis guineensis; S

@@ -1,0 +1,16 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Acrogymnospermae; 
+Pinopsida; C
+Pinidae; 
+Conifers II; 
+Cupressales; O
+Cupressaceae; F
+Juniperus; G
+Juniperus communis; S

@@ -1,0 +1,18 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Liliopsida; 
+Petrosaviidae; 
+Asparagales; O
+Iridaceae; F
+Crocoideae; 
+Croceae; 
+Crocus; G
+Crocus sativus; S

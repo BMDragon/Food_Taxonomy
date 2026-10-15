@@ -1,0 +1,12 @@
+Eukaryota; 
+Opisthokonta; 
+Fungi; K
+Dikarya; 
+Ascomycota; P
+Saccharomyceta; 
+Saccharomycotina; 
+Saccharomycetes; C
+Saccharomycetales; O
+Saccharomycetaceae; F
+Saccharomyces; G
+Saccharomyces cerevisiae; S
