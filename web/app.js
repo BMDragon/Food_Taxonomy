@@ -92,7 +92,7 @@ for (const button of document.querySelectorAll(".tabs button")) {
 function annotate(node, kingdom) {
   if (node.code === "K") kingdom = node.name;
   node.kingdom = kingdom;
-  node.leaves = node.children.length === 0 ? 1 : 0;
+  node.leaves = node.eaten || node.children.length === 0 ? 1 : 0;
   for (const child of node.children) node.leaves += annotate(child, kingdom);
   return node.leaves;
 }
@@ -102,7 +102,7 @@ function majorOnly(node) {
   const children = [];
   const collect = (parent) => {
     for (const child of parent.children) {
-      if (child.code || child.children.length === 0) children.push(majorOnly(child));
+      if (child.code || child.children.length === 0 || child.eaten) children.push(majorOnly(child));
       else collect(child);
     }
   };
@@ -123,19 +123,26 @@ function selfMatches(node, query, files) {
   return own.some((text) => text.toLowerCase().includes(query));
 }
 
+// The food names and Remove buttons for an eaten node (one per taxonomy file)
+function foodParts(node, query, files) {
+  const nodeFiles = files[node.name] || [];
+  const foods = nodeFiles.map(foodName).join(", ");
+  return [
+    foods ? el("span", { class: "food" }, highlight(foods, query)) : null,
+    nodeFiles.map((filename) => el("button", {
+      type: "button", class: "remove",
+      title: `Remove ${filename}`, "aria-label": `Remove ${foodName(filename)} (${node.name})`,
+      onclick: (event) => { event.preventDefault(); removeFile(filename, node.name); },
+    }, nodeFiles.length > 1 ? `Remove ${foodName(filename)}` : "Remove")),
+  ];
+}
+
 function renderNode(node, query, files, showAll) {
   const style = node.kingdom ? `--kingdom: ${kingdomVar(node.kingdom)}` : null;
   if (node.children.length === 0) {
-    const leafFiles = files[node.name] || [];
-    const foods = leafFiles.map(foodName).join(", ");
     return el("li", { class: "leaf", style },
       el("span", { class: "sci" }, highlight(node.name, query)),
-      foods ? el("span", { class: "food" }, highlight(foods, query)) : null,
-      leafFiles.map((filename) => el("button", {
-        type: "button", class: "remove",
-        title: `Remove ${filename}`, "aria-label": `Remove ${foodName(filename)} (${node.name})`,
-        onclick: () => removeFile(filename, node.name),
-      }, leafFiles.length > 1 ? `Remove ${foodName(filename)}` : "Remove")));
+      foodParts(node, query, files));
   }
   const showChildren = showAll || (query && selfMatches(node, query, files));
   const children = node.children.filter((child) => showChildren || matches(child, query, files));
@@ -146,6 +153,8 @@ function renderNode(node, query, files, showAll) {
         node.code === "K" ? el("span", { class: "kdot", "aria-hidden": "true" }) : null,
         el("span", { class: node.code ? "name" : "" }, highlight(node.name, query)),
         rankName ? el("span", { class: "rank" }, rankName) : null,
+        // A species eaten itself, with a variety or subspecies below it (onion above shallot)
+        node.eaten ? foodParts(node, query, files) : null,
         el("span", { class: "count" }, plural(node.leaves, "organism", "organisms"))),
       el("ul", {}, children.map((child) => renderNode(child, query, files, showChildren)))));
 }

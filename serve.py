@@ -24,7 +24,7 @@ ncbi_lock = threading.Lock()
 files_lock = threading.Lock()
 
 def node_json(node):
-    return {"name": node.value, "code": node.code,
+    return {"name": node.value, "code": node.code, "eaten": node.eaten,
             "children": [node_json(child) for child in node.children.values()]}
 
 def leaf_files():

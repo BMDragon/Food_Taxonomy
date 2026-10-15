@@ -9,6 +9,9 @@ class TreeNode:
         self.value = value
         self.code = code
         self.children = {}
+        # True when a taxonomy file ends here. Usually a leaf, but a species can
+        # also have an eaten variety below it (onion above shallot).
+        self.eaten = False
 
     def get_or_add_child(self, value, code):
         # Children are keyed by name under their parent, so identically named
@@ -68,6 +71,7 @@ def build_tree(folder=taxonomy_dir):
                 else:
                     node = node.get_or_add_child(name, code)
         if node is not None:
+            node.eaten = True
             leaf_files.setdefault(id(node), (node, []))[1].append(filename)
     if root is None:
         raise ValueError(f"no taxonomy files found in {folder}")
@@ -115,9 +119,16 @@ def compute_depths(root):
                 stack.append((child, depth))
     return depths
 
+def newick_name(name):
+    # Names with Newick's special characters (e.g. NCBI's "Poeae Chloroplast Group 1
+    # (Aveneae type)") are put in single quotes, with any quote inside doubled
+    if any(char in name for char in "()[]',:;"):
+        return "'" + name.replace("'", "''") + "'"
+    return name
+
 def save_tree(node, depths, parent_depth):
     depth = depths[node.code] if node.code != '' else parent_depth + 1
-    label = node.value + ':' + str((depth - parent_depth)*base)
+    label = newick_name(node.value) + ':' + str((depth - parent_depth)*base)
     if len(node.children) == 0:
         return label
     return '(' + ','.join(save_tree(child, depths, depth) for child in node.children.values()) + ')' + label
@@ -125,7 +136,7 @@ def save_tree(node, depths, parent_depth):
 def ranked_descendants(node):
     # The nearest ranked nodes (or leaves) below node, skipping unranked clades
     for child in node.children.values():
-        if child.code != '' or len(child.children) == 0:
+        if child.code != '' or len(child.children) == 0 or child.eaten:
             yield child
         else:
             yield from ranked_descendants(child)
@@ -134,7 +145,7 @@ def save_major_tree(node, parent_depth):
     # Like save_tree, but keeps only the root, the major ranks and the leaves.
     # Each rank has a fixed depth, so a skipped rank shows as a longer branch.
     depth = RANK_ORDER.index(node.code) + 1 if node.code != '' else parent_depth + 1
-    label = node.value + ':' + str((depth - parent_depth)*base)
+    label = newick_name(node.value) + ':' + str((depth - parent_depth)*base)
     children = list(ranked_descendants(node))
     if len(children) == 0:
         return label
@@ -162,7 +173,7 @@ def collect_stats(root):
         counts = kingdoms.setdefault(kingdom or "(no kingdom)", {})
         if node.code != '':
             counts[node.code] = counts.get(node.code, 0) + 1
-        if len(node.children) == 0:
+        if node.eaten or len(node.children) == 0:
             kind = leaf_kind(node, under_species)
             counts[kind] = counts.get(kind, 0) + 1
             counts["organisms"] = counts.get("organisms", 0) + 1
@@ -261,13 +272,20 @@ def draw_tree(root, depths, major, path, fmt=None, common_names=None):
     parent_x = {id(child): x for _, x, _, children in placed for child, _, _, _ in children}
 
     # Every clade is named above the branch leading into it. A species above a
-    # subspecies or variety is skipped: the organism's name already contains it.
-    labelled = [(node, x, y) for node, x, y, children in placed
-                if children and node is not root and node.code != 'S']
+    # subspecies or variety is skipped (the organism's name already contains it),
+    # unless the species was eaten itself; then its common name is added.
+    labelled = []
+    for node, x, y, children in placed:
+        if not children or node is root or (node.code == 'S' and not node.eaten):
+            continue
+        text = node.value
+        if node.eaten and common_names.get(node.value):
+            text += f" ({common_names[node.value]})"
+        labelled.append((node, x, y, text))
     # Each depth step is made wide enough that every name fits on its own branch
     unit = 60.0 if major else 30.0
-    for node, x, y in labelled:
-        unit = max(unit, (text_width(node.value, LABEL_SIZE) + 8) / (x - parent_x[id(node)]))
+    for node, x, y, text in labelled:
+        unit = max(unit, (text_width(text, LABEL_SIZE) + 8) / (x - parent_x[id(node)]))
     leaf_texts = {}
     for node, x, y, children in placed:
         if not children:
@@ -297,10 +315,10 @@ def draw_tree(root, depths, major, path, fmt=None, common_names=None):
             if common:
                 ax.annotate(common, (x, y), xytext=(8 + text_width(name, LEAF_SIZE, "italic"), 0),
                             textcoords="offset points", ha="left", va="center", fontsize=LEAF_SIZE, color="#555555")
-    for node, x, y in labelled:
+    for node, x, y, text in labelled:
         # Ranked clades in dark text, unranked clades lighter
-        ax.annotate(node.value, (x, y), xytext=(-3, 2), textcoords="offset points", ha="right", va="bottom",
-                    fontsize=LABEL_SIZE, color="#222222" if node.code else "#888888")
+        ax.annotate(text, (x, y), xytext=(-3, 2), textcoords="offset points", ha="right", va="bottom",
+                    fontsize=LABEL_SIZE, color="#222222" if node.code or node.eaten else "#888888")
     _, root_x, root_y, _ = placed[-1]
     ax.annotate(root.value, (root_x, root_y), xytext=(-4, 0), textcoords="offset points",
                 ha="right", va="center", fontsize=LABEL_SIZE, color="#222222")

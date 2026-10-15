@@ -45,11 +45,20 @@ def parse_newick(text):
                     continue
                 i += 1
                 break
+        if text[i] == "'":
+            # A quoted name, with '' standing for a quote inside it
+            j = i + 1
+            while not (text[j] == "'" and text[j + 1] != "'"):
+                j += 2 if text[j] == "'" else 1
+            name = text[i + 1:j].replace("''", "'")
+            i = j + 1
+        else:
+            name = None
         j = i
         while text[j] not in ',);':
             j += 1
-        name, length = text[i:j].rsplit(':', 1)
-        return (name, int(length), children), j
+        unquoted, length = text[i:j].rsplit(':', 1)
+        return (unquoted if name is None else name, int(length), children), j
     text = text.strip()
     return parse(0)[0]
 
@@ -151,6 +160,30 @@ class TreeTests(unittest.TestCase):
             leaves = [node.value for node, _, _, children in placed if not children]
             self.assertEqual(sorted(leaves), sorted(lines[-1].partition(';')[0].strip() for lines in SAMPLE.values()))
             self.assertEqual(leaf_count, len(SAMPLE))
+
+    def test_species_eaten_above_its_subspecies_counts_as_an_organism(self):
+        # Like red onion (Allium cepa) above shallot (Allium cepa var. aggregatum)
+        write_folder(self.folder, {"human.txt": HUMAN, "homo_sapiens.txt": HUMAN[:-1], "apple.txt": APPLE})
+        root, warnings, _, major = build(self.folder)
+        self.assertEqual(warnings, [])
+        kingdoms, totals = make_tree.collect_stats(root)
+        self.assertEqual(totals["organisms"], 3)
+        self.assertEqual(totals["species"], 2)
+        self.assertEqual(totals["subspecies"], 1)
+        self.assertIn("Homo sapiens", {name for name, _, _, _ in walk(parse_newick(major))})
+
+    def test_names_with_newick_characters_are_quoted(self):
+        oat = APPLE[:5] + ["Poeae Chloroplast Group 1 (Aveneae type); ", "Pooideae; O", "Poaceae; F",
+                           "Avena; G", "Avena sativa; S"]
+        oat = [line.replace("Rosids", "x") for line in oat]
+        write_folder(self.folder, {"oat.txt": oat, "apple.txt": APPLE, "o'brien.txt": APPLE[:5] + ["Fo'o; ", "Bar; O", "Baz; F", "Qux; G", "Qux quux; S"]})
+        _, _, full, major = build(self.folder)
+        self.assertIn("'Poeae Chloroplast Group 1 (Aveneae type)':", full)
+        self.assertIn("'Fo''o':", full)
+        names = {name for name, _, _, _ in walk(parse_newick(full))}
+        self.assertIn("Poeae Chloroplast Group 1 (Aveneae type)", names)
+        self.assertIn("Fo'o", names)
+        self.assertIn("Avena sativa", {name for name, _, _, _ in walk(parse_newick(major))})
 
     def test_leaf_common_names_come_from_file_names(self):
         write_folder(self.folder, {"american_clawed_lobster.txt": HUMAN, "apple.txt": APPLE, "apple_2.txt": APPLE})
