@@ -25,9 +25,10 @@ class ServerTests(unittest.TestCase):
         self.folder = os.path.join(self.tmp.name, "taxonomy_files")
         os.mkdir(self.folder)
         write_folder(self.folder, SAMPLE)
-        self.saved = (make_tree.taxonomy_dir, make_tree.output_path, fetch_lineage.taxonomy_dir)
+        self.saved = (make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, fetch_lineage.taxonomy_dir)
         make_tree.taxonomy_dir = fetch_lineage.taxonomy_dir = self.folder
         make_tree.output_path = os.path.join(self.tmp.name, "taxon_tree.txt")
+        make_tree.cladogram_path = os.path.join(self.tmp.name, "cladogram.png")
         serve.Handler.token = TOKEN
         self.server = serve.ThreadingHTTPServer(("127.0.0.1", 0), serve.Handler)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
@@ -36,7 +37,7 @@ class ServerTests(unittest.TestCase):
     def tearDown(self):
         self.server.shutdown()
         self.server.server_close()
-        make_tree.taxonomy_dir, make_tree.output_path, fetch_lineage.taxonomy_dir = self.saved
+        make_tree.taxonomy_dir, make_tree.output_path, make_tree.cladogram_path, fetch_lineage.taxonomy_dir = self.saved
         self.tmp.cleanup()
 
     def request(self, path, body=None, token=TOKEN):
@@ -104,6 +105,20 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(self.request("/api/save", {"filename": removed["filename"], "text": removed["text"]})[0], 200)
         with open(apple_path, 'r') as f:
             self.assertEqual(f.read(), original)
+
+    def test_save_and_remove_redraw_the_cladogram(self):
+        try:
+            import matplotlib  # noqa: F401
+        except ImportError:
+            self.skipTest("matplotlib is not installed")
+        pear = APPLE[:-2] + ["Pyrus; G", "Pyrus communis; S"]
+        self.assertEqual(self.request("/api/save", {"filename": "pear", "text": "\n".join(pear)})[0], 200)
+        with open(make_tree.cladogram_path, 'rb') as f:
+            with_pear = f.read()
+        self.assertTrue(with_pear.startswith(b"\x89PNG"))
+        self.assertEqual(self.request("/api/remove", {"filename": "pear"})[0], 200)
+        with open(make_tree.cladogram_path, 'rb') as f:
+            self.assertNotEqual(f.read(), with_pear)
 
     def test_remove_refuses_bad_requests(self):
         self.assertEqual(self.request("/api/remove", {"filename": "nothing_here"})[0], 400)

@@ -39,11 +39,15 @@ def leaf_files():
     return files
 
 def rebuild():
-    # Rebuilds taxon_tree.txt from the files and returns (root, warnings, depths)
+    # Rebuilds taxon_tree.txt and cladogram.png from the files and returns (root, warnings, depths)
     root, warnings = make_tree.build_tree(make_tree.taxonomy_dir)
     depths = make_tree.compute_depths(root)
     with open(make_tree.output_path, 'w') as f:
         f.write(make_tree.save_tree(root, depths, -1) + ";\n")
+    try:
+        make_tree.write_cladogram(root, depths)
+    except ImportError:
+        pass
     return root, warnings, depths
 
 class ApiError(Exception):

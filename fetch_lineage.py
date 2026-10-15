@@ -206,7 +206,10 @@ def main():
                              "apple=\"Malus domestica\"; otherwise the file is named after the common name")
     parser.add_argument("--force", action="store_true", help="overwrite existing files and allow organisms already in another file")
     parser.add_argument("--dry-run", action="store_true", help="print the files instead of writing them")
-    parser.add_argument("--build", action="store_true", help="run make_tree.py afterwards")
+    parser.add_argument("--no-build", action="store_true",
+                        help="don't rebuild taxon_tree.txt and cladogram.png afterwards")
+    # Rebuilding is now the default; --build is still accepted
+    parser.add_argument("--build", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     failed = 0
@@ -217,7 +220,7 @@ def main():
             print(f"Error: {e}", file=sys.stderr)
             failed += 1
 
-    if args.build and not args.dry_run and failed < len(args.names):
+    if not args.no_build and not args.dry_run and failed < len(args.names):
         subprocess.run([sys.executable, os.path.join(script_dir, "make_tree.py")], check=True)
     sys.exit(1 if failed else 0)
 

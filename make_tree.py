@@ -32,6 +32,9 @@ taxonomy_dir = os.path.join(script_dir, "taxonomy_files")
 output_path = os.path.join(script_dir, "taxon_tree.txt")
 major_output_path = os.path.join(script_dir, "taxon_tree_major.txt")
 stats_path = os.path.join(script_dir, "stats.md")
+# Redrawn on every build (major ranks only; the full drawing is too wide to view as an image)
+cladogram_path = os.path.join(script_dir, "cladogram.png")
+CLADOGRAM_DPI = 120
 
 def parse_line(line, filename, line_num):
     name, sep, code = line.partition(';')
@@ -252,7 +255,7 @@ LABEL_SIZE = 7
 LEAF_SIZE = 8
 ROW_HEIGHT = 23   # points between organisms
 
-def draw_tree(root, depths, major, path, fmt=None, common_names=None):
+def draw_tree(root, depths, major, path, fmt=None, common_names=None, dpi=None):
     # path is a file name, or a file object with fmt ("svg", "png"...) given.
     # common_names maps organisms to the common name shown after them.
     # matplotlib is only needed for this option
@@ -328,11 +331,16 @@ def draw_tree(root, depths, major, path, fmt=None, common_names=None):
     for code, x in rank_depths.items():
         ax.text(x, -1.2, RANK_NAMES[code], ha="left", va="bottom", rotation=35, fontsize=7, color="#777777")
         ax.axvline(x, color="#dddddd", linewidth=0.5, zorder=0)
-    fig.savefig(path, format=fmt)
+    fig.savefig(path, format=fmt, dpi=dpi)
     plt.close(fig)
 
+def write_cladogram(root, depths):
+    # Redraws cladogram.png; called whenever the tree is rebuilt.
+    # Raises ImportError when matplotlib isn't installed.
+    draw_tree(root, depths, True, cladogram_path, common_names=leaf_common_names(taxonomy_dir), dpi=CLADOGRAM_DPI)
+
 def main():
-    parser = argparse.ArgumentParser(description="Build taxon_tree.txt from the files in taxonomy_files/.")
+    parser = argparse.ArgumentParser(description="Build taxon_tree.txt and cladogram.png from the files in taxonomy_files/.")
     parser.add_argument("--stats", action="store_true", help="print counts of the organisms and taxa in the tree")
     parser.add_argument("--stats-md", action="store_true", help="also write the stats to stats.md")
     parser.add_argument("--major-only", action="store_true",
@@ -351,6 +359,10 @@ def main():
 
     with open(output_path, 'w') as f:
         f.write(save_tree(root, depths, -1) + ";\n")
+    try:
+        write_cladogram(root, depths)
+    except ImportError:
+        print("Warning: cladogram.png not updated (needs matplotlib: pip install --user matplotlib)", file=sys.stderr)
     if args.major_only:
         with open(major_output_path, 'w') as f:
             f.write(save_major_tree(root, -1) + ";\n")

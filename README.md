@@ -5,10 +5,10 @@ Taxonomy of things I can remember consuming
 
 `python3 serve.py` starts a local website and prints a link like `http://localhost:8765/?token=...`. Open that link (the token keeps other users of a shared machine out). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
 
-- **Tree**: the whole tree, collapsible and searchable by taxon or food name; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
+- **Tree**: the whole tree, collapsible and searchable by taxon or food name; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` and `cladogram.png` (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
 - **Cladogram**: the drawn tree (needs matplotlib).
 - **Stats**: organism and taxon counts, overall and by kingdom.
-- **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` is rebuilt automatically. Commit the new file afterwards.
+- **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` and `cladogram.png` are rebuilt automatically. Commit the new file afterwards.
 - **Gaps**: the `gaps.py` report for any taxon.
 
 Press Ctrl+C in the terminal to stop the server.
@@ -19,18 +19,18 @@ Usage: Add a `.txt` file to the "taxonomy_files" folder for each organism, in th
 
 The easiest way to add a file is to fetch it from NCBI Taxonomy:
 ```
-python3 fetch_lineage.py apple="Malus domestica" "Brassica oleracea var. capitata" --build
+python3 fetch_lineage.py apple="Malus domestica" "Brassica oleracea var. capitata"
 ```
 - `apple="Malus domestica"` writes `taxonomy_files/apple.txt`. Without a file name, the file is named after the common name: the one you typed (`"honey bee"` → `honey_bee.txt`), otherwise NCBI's (`"Brassica oleracea var. capitata"` → `cabbage.txt`). If NCBI has no common name, give a file name.
 - Only eukaryotic species, subspecies and varieties are accepted. Common names and synonyms are tried if the scientific name isn't found.
 - Clade names already used in other files keep their existing spelling (e.g. NCBI's `eudicotyledons` is written `Eudicotyledons`).
 - Existing files, and organisms already in another file, are not overwritten or duplicated unless `--force` is given.
-- `--dry-run` prints the files instead of writing them; `--build` runs `make_tree.py` afterwards.
+- After writing files it runs `make_tree.py`, which rebuilds `taxon_tree.txt` and `cladogram.png`; `--no-build` skips that. `--dry-run` prints the files instead of writing them.
 - Set the `NCBI_API_KEY` environment variable to use an NCBI API key (optional; raises the request limit from 3 to 10 per second).
 
 Organisms NCBI doesn't list (e.g. `Homo sapiens sapiens`) can still be added by hand.
 
-Generates a cladogram file (`taxon_tree.txt`) in the Newick format, for upload into https://cladogrammaker.com/
+Generates a cladogram file (`taxon_tree.txt`) in the Newick format, for upload into https://cladogrammaker.com/, and draws the major-ranks cladogram to `cladogram.png` (needs matplotlib). Both are regenerated whenever organisms are added or removed through the website or `fetch_lineage.py`; after editing or deleting files by hand, run `python3 make_tree.py`.
 
 Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up at the same depth across the whole tree.
 
