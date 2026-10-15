@@ -1,0 +1,16 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Cephalopoda; C
+Coleoidea; 
+Decapodiformes; 
+Myopsida; O
+Loliginidae; F
+Uroteuthis; G
+Uroteuthis duvaucelii; S

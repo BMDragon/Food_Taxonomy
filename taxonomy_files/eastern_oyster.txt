@@ -1,0 +1,17 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Bivalvia; C
+Autobranchia; 
+Pteriomorphia; 
+Ostreida; O
+Ostreoidea; 
+Ostreidae; F
+Crassostrea; G
+Crassostrea virginica; S

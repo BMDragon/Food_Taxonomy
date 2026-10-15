@@ -1,0 +1,17 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Echinodermata; P
+Eleutherozoa; 
+Echinozoa; 
+Echinoidea; C
+Euechinoidea; 
+Echinacea; 
+Camarodonta; O
+Echinidea; 
+Strongylocentrotidae; F
+Strongylocentrotus; G
+Strongylocentrotus intermedius; S

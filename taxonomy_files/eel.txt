@@ -1,0 +1,23 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Elopocephalai; 
+Elopocephala; 
+Elopomorpha; 
+Anguilliformes; O
+Anguillidae; F
+Anguilla; G
+Anguilla japonica; S

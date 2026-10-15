@@ -1,0 +1,17 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Cephalopoda; C
+Coleoidea; 
+Octopodiformes; 
+Octopoda; O
+Incirrata; 
+Octopodidae; F
+Octopus; G
+Octopus vulgaris; S

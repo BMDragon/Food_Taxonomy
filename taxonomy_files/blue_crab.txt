@@ -1,0 +1,26 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Ecdysozoa; 
+Panarthropoda; 
+Arthropoda; P
+Mandibulata; 
+Pancrustacea; 
+Altocrustacea; 
+Communostraca; 
+Malacostraca; C
+Eumalacostraca; 
+Stomatocarida; 
+Decapoda; O
+Pleocyemata; 
+Brachyura; 
+Eubrachyura; 
+Heterotremata; 
+Portunoidea; 
+Portunidae; F
+Portuninae; 
+Callinectes; G
+Callinectes sapidus; S

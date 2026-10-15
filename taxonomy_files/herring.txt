@@ -1,0 +1,26 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Osteoglossocephalai; 
+Clupeocephala; 
+Otomorpha; 
+Clupei; 
+Clupeiformes; O
+Clupeoidei; 
+Clupeidae; F
+Clupeinae; 
+Clupea; G
+Clupea harengus; S

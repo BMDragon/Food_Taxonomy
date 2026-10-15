@@ -1,0 +1,26 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Neopterygii; 
+Teleostei; 
+Osteoglossocephalai; 
+Clupeocephala; 
+Otomorpha; 
+Clupei; 
+Clupeiformes; O
+Clupeoidei; 
+Engraulidae; F
+Engraulinae; 
+Engraulis; G
+Engraulis encrasicolus; S

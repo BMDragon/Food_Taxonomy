@@ -1,0 +1,21 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Actinopterygii; 
+Actinopteri; C
+Chondrostei; 
+Acipenseriformes; O
+Acipenseroidei; 
+Acipenseridae; F
+Husinae; 
+Huso; G
+Huso huso; S

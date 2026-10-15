@@ -1,0 +1,18 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Bivalvia; C
+Autobranchia; 
+Pteriomorphia; 
+Mytilida; O
+Mytiloidea; 
+Mytilidae; F
+Mytilinae; 
+Mytilus; G
+Mytilus edulis; S

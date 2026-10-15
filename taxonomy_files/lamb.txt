@@ -1,0 +1,28 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Sarcopterygii; 
+Dipnotetrapodomorpha; 
+Tetrapoda; 
+Amniota; 
+Mammalia; C
+Theria; 
+Eutheria; 
+Boreoeutheria; 
+Laurasiatheria; 
+Artiodactyla; O
+Ruminantia; 
+Pecora; 
+Bovidae; F
+Caprinae; 
+Ovis; G
+Ovis aries; S

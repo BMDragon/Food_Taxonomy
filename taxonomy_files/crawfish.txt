@@ -1,0 +1,24 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Ecdysozoa; 
+Panarthropoda; 
+Arthropoda; P
+Mandibulata; 
+Pancrustacea; 
+Altocrustacea; 
+Communostraca; 
+Malacostraca; C
+Eumalacostraca; 
+Stomatocarida; 
+Decapoda; O
+Pleocyemata; 
+Astacidea; 
+Astacoidea; 
+Cambaridae; F
+Cambarinae; 
+Procambarus; G
+Procambarus clarkii; S

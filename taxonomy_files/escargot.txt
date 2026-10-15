@@ -1,0 +1,21 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Protostomia; 
+Spiralia; 
+Lophotrochozoa; 
+Mollusca; P
+Gastropoda; C
+Heterobranchia; 
+Euthyneura; 
+Panpulmonata; 
+Eupulmonata; 
+Stylommatophora; O
+Helicina; 
+Helicoidea; 
+Helicidae; F
+Cornu; G
+Cornu (subgenus); 
+Cornu aspersum; S
