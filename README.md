@@ -9,7 +9,7 @@ Taxonomy of things I can remember consuming
 - **Cladogram**: the drawn tree (needs matplotlib).
 - **Stats**: organism and taxon counts, overall and by kingdom.
 - **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` and the cladogram PNGs are rebuilt automatically. Commit the new file afterwards.
-- **Gaps**: the `gaps.py` report for any taxon.
+- **Gaps**: the `gaps.py` report for any taxon, listing groups you haven't eaten from that contain common foods, with examples.
 
 Press Ctrl+C in the terminal to stop the server.
 
@@ -43,6 +43,8 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 `python3 make_tree.py --draw tree.svg` draws the tree to an image (`.svg`, `.png` or `.pdf`), with the major ranks lined up in columns. Add `--major-only` to draw the simpler tree. Drawing needs matplotlib (`pip install --user -r requirements.txt`); nothing else does.
 
 `python3 gaps.py Mammalia` lists the groups one rank down (here, orders of mammals) and which of them you haven't eaten yet, using NCBI Taxonomy. Use `--rank` to choose another rank (kingdom to family), e.g. `python3 gaps.py Viridiplantae --rank order`. NCBI results are cached in `.ncbi_cache/`; `--refresh` fetches them again.
+
+By default, "not eaten yet" only lists groups that contain at least one commonly eaten species from `common_foods.tsv` (about 580 foods worldwide), each with up to three example foods, e.g. "Rodentia (rodents): e.g. guinea pig, capybara". `--all` (or the website's "Include groups with no common foods" box) lists every group. To extend the food list, add a line `food<TAB>scientific name` to `common_foods.tsv` and run `python3 update_common_foods.py`, which looks up the lineage on NCBI.
 
 `make_tree.py` warns about likely mistakes in the taxonomy files: two files that end at the same organism, and a name that appears under two different parents (usually a skipped or extra line in one file).
 

@@ -161,12 +161,12 @@ class Handler(BaseHTTPRequestHandler):
             raise ApiError("enter a taxon, e.g. Mammalia")
         rank = query.get("rank", [""])[0] or None
         refresh = query.get("refresh", ["0"])[0] == "1"
+        show_all = query.get("all", ["0"])[0] == "1"
         with files_lock:
             root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
         with ncbi_lock:
-            report = gaps.gap_report(root, taxon, rank, refresh)
-        del report["groups"]
-        report["total"] = len(report["have"]) + len(report["missing"])
+            report = gaps.gap_report(root, taxon, rank, refresh, show_all)
+        report["total"] = len(report.pop("groups"))
         report["plural"] = gaps.PLURALS[report["rank"]]
         self.send_json(report)
 

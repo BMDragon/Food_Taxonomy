@@ -365,17 +365,25 @@ document.getElementById("gaps-form").addEventListener("submit", async (event) =>
     taxon: document.getElementById("gaps-taxon").value,
     rank: document.getElementById("gaps-rank").value,
     refresh: document.getElementById("gaps-refresh").checked ? "1" : "0",
+    all: document.getElementById("gaps-all").checked ? "1" : "0",
   });
   button.disabled = true;
   gapsResult.replaceChildren(el("p", { class: "muted" }, "Looking up NCBI (the first lookup of a group can take a few seconds)…"));
   try {
     const report = await api(`/api/gaps?${params}`);
-    const describe = (group) => el("li", {}, el("i", {}, group.name), group.common ? el("span", { class: "muted" }, ` (${group.common})`) : null);
+    const describe = (group) => el("li", {}, el("i", {}, group.name),
+      group.common ? el("span", { class: "muted" }, ` (${group.common})`) : null,
+      group.examples && group.examples.length ? el("span", {}, `: e.g. ${group.examples.join(", ")}`) : null);
+    const missingTitle = report.filtered ? "Not eaten yet, with common foods" : "Not eaten yet";
     gapsResult.replaceChildren(el("div", { class: "card" },
       el("h2", { style: "margin-top:0" }, `${report.name}: ${report.have.length} of ${report.total} ${report.plural} eaten`),
       el("div", { class: `gap-lists${report.missing.length > 20 ? " cols" : ""}` },
         el("div", {}, el("h3", {}, `Eaten (${report.have.length})`), el("ul", {}, report.have.map(describe))),
-        el("div", {}, el("h3", {}, `Not eaten yet (${report.missing.length})`), el("ul", {}, report.missing.map(describe)))),
+        el("div", {}, el("h3", {}, `${missingTitle} (${report.missing.length})`), el("ul", {}, report.missing.map(describe)))),
+      report.hidden
+        ? el("p", { class: "muted" }, `${report.hidden} more ${report.plural} with no common foods aren't shown. ` +
+            "Tick “Include groups with no common foods” to list them.")
+        : null,
       report.unknown.length
         ? el("p", { class: "muted" }, `In the tree but not listed by NCBI as ${report.plural} of ${report.name}: ${report.unknown.join(", ")}`)
         : null));

@@ -38,6 +38,20 @@ class GapTests(unittest.TestCase):
         # A name NCBI doesn't list at that rank is reported, not silently dropped
         self.assertEqual(unknown, ["Lagomorpha"])
 
+    def test_missing_groups_filtered_to_common_foods(self):
+        foods = [("guinea pig", "Cavia porcellus", ["Eukaryota", "Mammalia", "Rodentia", "Caviidae", "Cavia porcellus"]),
+                 ("beef", "Bos taurus", ["Eukaryota", "Mammalia", "Artiodactyla", "Bovidae", "Bos taurus"])]
+        missing = [{"name": "Rodentia", "common": "rodents"}, {"name": "Notoryctemorphia", "common": ""}]
+        edible = gaps.foods_by_taxon(foods)
+        shown, hidden = gaps.filter_missing(missing, edible, show_all=False)
+        self.assertEqual([group["name"] for group in shown], ["Rodentia"])
+        self.assertEqual(shown[0]["examples"], ["guinea pig"])
+        self.assertEqual(hidden, 1)
+        shown, hidden = gaps.filter_missing(missing, edible, show_all=True)
+        self.assertEqual([group["name"] for group in shown], ["Rodentia", "Notoryctemorphia"])
+        self.assertEqual(hidden, 0)
+        self.assertEqual(gaps.describe(shown[0]), "Rodentia (rodents): e.g. guinea pig")
+
     def test_describe(self):
         self.assertEqual(gaps.describe(MAMMAL_ORDERS[1]), "Carnivora (carnivores)")
         self.assertEqual(gaps.describe({"name": "Pilosa", "common": ""}), "Pilosa")

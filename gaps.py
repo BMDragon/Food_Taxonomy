@@ -15,6 +15,33 @@ PLURALS = {"kingdom": "kingdoms", "phylum": "phyla", "class": "classes", "order"
 BATCH = 200
 
 cache_dir = os.path.join(make_tree.script_dir, ".ncbi_cache")
+# Commonly eaten species with their NCBI lineages ("food<TAB>species<TAB>lineage; ..."),
+# used to show only gaps that contain real foods. Lineages are filled by update_common_foods.py.
+common_foods_path = os.path.join(make_tree.script_dir, "common_foods.tsv")
+EXAMPLES = 3
+
+def load_common_foods():
+    # Returns [(food, species, [lineage names])] for entries whose lineage is filled in
+    foods = []
+    if os.path.exists(common_foods_path):
+        with open(common_foods_path, 'r') as f:
+            for line in f:
+                if not line.strip() or line.startswith('#'):
+                    continue
+                parts = line.rstrip('\n').split('\t')
+                if len(parts) >= 3 and parts[2].strip():
+                    foods.append((parts[0], parts[1], [name.strip() for name in parts[2].split(';')]))
+    return foods
+
+def foods_by_taxon(foods):
+    # Maps each lowercased taxon name to the foods inside it
+    found = {}
+    for food, species, lineage in foods:
+        for name in lineage:
+            found.setdefault(name.lower(), [])
+            if food not in found[name.lower()]:
+                found[name.lower()].append(food)
+    return found
 
 def ncbi_summaries(ids):
     summaries = []
@@ -83,9 +110,20 @@ def compare(eaten, groups):
     unknown = sorted(name for name in eaten if name.lower() not in ncbi_names)
     return have, missing, unknown
 
-def gap_report(root, taxon, rank=None, refresh=False):
-    # Returns {"name", "rank", "groups", "have", "missing", "unknown"} for taxon;
-    # rank defaults to the next major rank below the taxon's
+def filter_missing(missing, edible, show_all):
+    # Adds example foods to each group not eaten yet, and (unless show_all) drops the
+    # groups with no common foods. Returns (groups to show, number hidden).
+    shown = []
+    for group in missing:
+        examples = edible.get(group["name"].lower(), [])
+        if examples or show_all:
+            shown.append(dict(group, examples=examples[:EXAMPLES]))
+    return shown, len(missing) - len(shown)
+
+def gap_report(root, taxon, rank=None, refresh=False, show_all=False):
+    # Returns {"name", "rank", "groups", "have", "missing", "hidden", "filtered", "unknown"}
+    # for taxon; rank defaults to the next major rank below the taxon's. "missing" only
+    # lists groups containing common foods unless show_all (or no food list exists).
     taxid, name, taxon_rank = ncbi_taxon(taxon, refresh)
     if rank is None:
         if taxon_rank not in GAP_RANKS:
@@ -100,10 +138,17 @@ def gap_report(root, taxon, rank=None, refresh=False):
         raise fetch_lineage.FetchError(f"'{name}' is a {taxon_rank}; choose a rank below it")
     groups = ncbi_groups(taxid, rank, refresh)
     have, missing, unknown = compare(eaten_groups(root, name, rank), groups)
-    return {"name": name, "rank": rank, "groups": groups, "have": have, "missing": missing, "unknown": unknown}
+    foods = load_common_foods()
+    filtered = bool(foods) and not show_all
+    missing, hidden = filter_missing(missing, foods_by_taxon(foods), not filtered)
+    return {"name": name, "rank": rank, "groups": groups, "have": have, "missing": missing,
+            "hidden": hidden, "filtered": filtered, "unknown": unknown}
 
 def describe(group):
-    return group["name"] + (f" ({group['common']})" if group["common"] else "")
+    text = group["name"] + (f" ({group['common']})" if group["common"] else "")
+    if group.get("examples"):
+        text += ": e.g. " + ", ".join(group["examples"])
+    return text
 
 def main():
     parser = argparse.ArgumentParser(description="List the groups within a taxon that aren't in the tree yet.")
@@ -111,11 +156,13 @@ def main():
     parser.add_argument("--rank", choices=GAP_RANKS,
                         help="rank of the groups to list (default: the next major rank below the taxon)")
     parser.add_argument("--refresh", action="store_true", help="ignore cached NCBI results")
+    parser.add_argument("--all", action="store_true",
+                        help="also list groups with no common foods (from common_foods.tsv)")
     args = parser.parse_args()
 
     try:
-        root, _ = make_tree.build_tree()
-        report = gap_report(root, args.taxon, args.rank, args.refresh)
+        root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
+        report = gap_report(root, args.taxon, args.rank, args.refresh, args.all)
     except (ValueError, fetch_lineage.FetchError) as e:
         sys.exit(f"Error: {e}")
 
@@ -125,9 +172,12 @@ def main():
     print(f"Eaten ({len(have)}):")
     for group in have:
         print("  " + describe(group))
-    print(f"\nNot eaten yet ({len(missing)}):")
+    label = " with common foods" if report["filtered"] else ""
+    print(f"\nNot eaten yet{label} ({len(missing)}):")
     for group in missing:
         print("  " + describe(group))
+    if report["hidden"]:
+        print(f"\n{report['hidden']} more {PLURALS[rank]} with no common foods not shown (use --all to list them)")
     if unknown:
         print(f"\nIn the tree but not listed by NCBI as {PLURALS[rank]} of {name}: " + ", ".join(unknown))
 
