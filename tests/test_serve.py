@@ -17,8 +17,6 @@ import make_tree
 import serve
 from test_make_tree import APPLE, SAMPLE, write_folder
 
-TOKEN = "test-token"
-
 class ServerTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -34,7 +32,6 @@ class ServerTests(unittest.TestCase):
         make_tree.meanings_path = os.path.join(self.tmp.name, "taxon_meanings.tsv")
         # Saving would otherwise ask NCBI for the new taxa's common names
         fetch_lineage.fill_meanings = lambda text: {}
-        serve.Handler.token = TOKEN
         self.server = serve.ThreadingHTTPServer(("127.0.0.1", 0), serve.Handler)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
@@ -46,8 +43,8 @@ class ServerTests(unittest.TestCase):
          make_tree.meanings_path, fetch_lineage.taxonomy_dir, fetch_lineage.fill_meanings) = self.saved
         self.tmp.cleanup()
 
-    def request(self, path, body=None, token=TOKEN):
-        headers = {"X-Token": token} if token else {}
+    def request(self, path, body=None):
+        headers = {}
         data = None
         if body is not None:
             data = json.dumps(body).encode()
@@ -58,16 +55,14 @@ class ServerTests(unittest.TestCase):
         except urllib.error.HTTPError as e:
             return e.code, e.read()
 
-    def test_token_required(self):
-        self.assertEqual(self.request("/", token=None)[0], 403)
-        self.assertEqual(self.request("/api/tree", token="wrong")[0], 403)
-        self.assertEqual(self.request("/api/save", {"filename": "x", "text": "y"}, token=None)[0], 403)
-        self.assertEqual(self.request("/?token=" + TOKEN, token=None)[0], 200)
+    def test_page_opens_without_a_token(self):
+        self.assertEqual(self.request("/")[0], 200)
+        self.assertEqual(self.request("/api/tree")[0], 200)
 
     def test_static_files_stay_in_web_folder(self):
-        self.assertEqual(self.request("/static/app.js", token=None)[0], 200)
-        self.assertEqual(self.request("/static/../serve.py", token=None)[0], 404)
-        self.assertEqual(self.request("/static/%2e%2e/serve.py", token=None)[0], 404)
+        self.assertEqual(self.request("/static/app.js")[0], 200)
+        self.assertEqual(self.request("/static/../serve.py")[0], 404)
+        self.assertEqual(self.request("/static/%2e%2e/serve.py")[0], 404)
 
     def test_tree_and_stats(self):
         status, body = self.request("/api/tree")
@@ -152,7 +147,6 @@ class ServerTests(unittest.TestCase):
             f.write("keep me")
         self.assertEqual(self.request("/api/remove", {"filename": "../outside.txt"})[0], 400)
         self.assertTrue(os.path.exists(outside))
-        self.assertEqual(self.request("/api/remove", {"filename": "apple"}, token="wrong")[0], 403)
         # The last organism can't be removed
         for name in ("apple", "chicken", "broccoli"):
             self.assertEqual(self.request("/api/remove", {"filename": name})[0], 200)

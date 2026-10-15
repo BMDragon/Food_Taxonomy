@@ -2,12 +2,10 @@
 # Run: python3 serve.py   then open the printed http://localhost:... link
 
 import argparse
-import hmac
 import io
 import json
 import mimetypes
 import os
-import secrets
 import sys
 import threading
 import urllib.parse
@@ -54,8 +52,6 @@ class ApiError(Exception):
     pass
 
 class Handler(BaseHTTPRequestHandler):
-    token = None
-
     def log_message(self, format, *args):
         # Keep the terminal quiet apart from errors
         pass
@@ -72,18 +68,11 @@ class Handler(BaseHTTPRequestHandler):
     def send_json(self, value, status=200):
         self.send(status, json.dumps(value), "application/json")
 
-    def authorized(self, query):
-        given = self.headers.get("X-Token") or query.get("token", [""])[0]
-        return hmac.compare_digest(given, self.token)
-
     def do_GET(self):
         url = urllib.parse.urlparse(self.path)
         query = urllib.parse.parse_qs(url.query)
         if url.path.startswith("/static/"):
             return self.serve_static(url.path[len("/static/"):])
-        if not self.authorized(query):
-            return self.send(403, "Open the link printed by serve.py (it includes the access token).\n",
-                             "text/plain; charset=utf-8")
         if url.path == "/":
             return self.serve_static("index.html")
         self.handle_api(url.path, query, None)
@@ -91,8 +80,6 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         url = urllib.parse.urlparse(self.path)
         query = urllib.parse.parse_qs(url.query)
-        if not self.authorized(query):
-            return self.send_json({"error": "missing or wrong access token"}, 403)
         try:
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length) or b"{}")
@@ -223,13 +210,12 @@ def main():
     parser.add_argument("--port", type=int, default=8765, help="port to listen on (default 8765)")
     args = parser.parse_args()
 
-    Handler.token = secrets.token_urlsafe(16)
     try:
-        # Only reachable from this machine; the token keeps other users of a shared machine out
+        # Only reachable from this machine
         server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
     except OSError as e:
         sys.exit(f"Error: can't use port {args.port} ({e.strerror}); try --port with another number")
-    print(f"Food Taxonomy is running at http://localhost:{args.port}/?token={Handler.token}", flush=True)
+    print(f"Food Taxonomy is running at http://localhost:{args.port}/", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     try:
         server.serve_forever()

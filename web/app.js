@@ -1,7 +1,6 @@
 // Food Taxonomy website. Everything is built with the DOM API (no innerHTML), so
 // names from NCBI or the taxonomy files can't inject markup.
 
-const token = new URLSearchParams(location.search).get("token") || "";
 const KINGDOM_COLORS = { Metazoa: "--k-metazoa", Fungi: "--k-fungi", Viridiplantae: "--k-viridiplantae" };
 
 let treeData = null;
@@ -25,7 +24,7 @@ function el(tag, attrs, ...children) {
 }
 
 async function api(path, body) {
-  const options = { headers: { "X-Token": token } };
+  const options = { headers: {} };
   if (body !== undefined) {
     options.method = "POST";
     options.headers["Content-Type"] = "application/json";
@@ -252,7 +251,7 @@ function loadCladogram() {
   const key = `${major}:${treeData ? treeData.tree.leaves : ""}`;
   if (key === cladogramKey) return;
   cladogramKey = key;
-  const src = `/api/cladogram.svg?major=${major}&token=${encodeURIComponent(token)}&v=${Date.now()}`;
+  const src = `/api/cladogram.svg?major=${major}&v=${Date.now()}`;
   const img = document.getElementById("clado-img");
   img.parentElement.classList.toggle("natural", !major);
   const status = document.getElementById("clado-status");

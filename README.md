@@ -3,7 +3,7 @@ Taxonomy of things I can remember consuming
 
 ## Website
 
-`python3 serve.py` starts a local website and prints a link like `http://localhost:8765/?token=...`. Open that link (the token keeps other users of a shared machine out). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
+`python3 serve.py` starts a local website at `http://localhost:8765/` (it only accepts connections from the same computer). Use `--port` to pick another port. Over VS Code Remote-SSH, the port is forwarded automatically, so the link works in your local browser.
 
 - **Tree**: the whole tree, collapsible and searchable by taxon, food name or meaning; each clade shows what its name means, e.g. "Tetrapoda (four-legged)"; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` and the cladogram PNGs (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
 - **Cladogram**: the drawn tree (needs matplotlib).
