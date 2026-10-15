@@ -1,0 +1,21 @@
+Eukaryota; 
+Viridiplantae; K
+Streptophyta; P
+Streptophytina; 
+Embryophyta; 
+Tracheophyta; 
+Euphyllophyta; 
+Spermatophyta; 
+Magnoliopsida; C
+Mesangiospermae; 
+Eudicotyledons; 
+Gunneridae; 
+Pentapetalae; 
+Rosids; 
+Malvids; 
+Brassicales; O
+Brassicaceae; F
+Brassiceae; 
+Brassica; G
+Brassica rapa; S
+Brassica rapa subsp. nipposinica
