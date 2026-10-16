@@ -1,0 +1,10 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Cnidaria; P
+Scyphozoa; C
+Rhizostomeae; O
+Rhizostomatidae; F
+Rhopilema; G
+Rhopilema esculentum; S
