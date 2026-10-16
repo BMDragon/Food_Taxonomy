@@ -1,0 +1,23 @@
+Eukaryota; 
+Opisthokonta; 
+Metazoa; K
+Eumetazoa; 
+Bilateria; 
+Deuterostomia; 
+Chordata; P
+Craniata; 
+Vertebrata; 
+Gnathostomata; 
+Teleostomi; 
+Euteleostomi; 
+Sarcopterygii; 
+Dipnotetrapodomorpha; 
+Tetrapoda; 
+Amphibia; C
+Batrachia; 
+Anura; O
+Neobatrachia; 
+Ranoidea; 
+Ranidae; F
+Aquarana; G
+Aquarana catesbeiana; S
