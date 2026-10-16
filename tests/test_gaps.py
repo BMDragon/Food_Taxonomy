@@ -105,12 +105,18 @@ class GapTests(unittest.TestCase):
             "apple\tMalus domestica\tEukaryota; Viridiplantae; Streptophyta; Magnoliopsida; Rosales; Malus; "
             "Malus domestica\tdomain; kingdom; phylum; class; order; genus; species\n"
             "pear\tPyrus communis\tEukaryota; Viridiplantae; Streptophyta; Magnoliopsida; Rosales; Pyrus; "
-            "Pyrus communis\tdomain; kingdom; phylum; class; order; genus; species\n")
+            "Pyrus communis\tdomain; kingdom; phylum; class; order; genus; species\n"
+            "hazelnut\tCorylus avellana\tEukaryota; Viridiplantae; Streptophyta; Magnoliopsida; Fagales; Corylus; "
+            "Corylus avellana\tdomain; kingdom; phylum; class; order; genus; species\n")
         top = gaps.coverage(self.root)
-        # Apple and pear from the list, plus human, chicken and broccoli from the tree
-        self.assertEqual((top["eaten"], top["total"]), (4, 5))
+        # Apple, pear and hazelnut from the list, plus human, chicken and broccoli from the tree
+        self.assertEqual((top["eaten"], top["total"]), (4, 6))
         plants = next(child for child in top["children"] if child["name"] == "Viridiplantae")
-        rosales = plants["children"][0]["children"][0]["children"][0]
+        flowering = plants["children"][0]["children"][0]
+        self.assertEqual((flowering["eaten"], flowering["total"]), (2, 4))
+        # Fagales has nothing eaten, so it's left out of the chart, but still counts above
+        self.assertEqual([order["name"] for order in flowering["children"]], ["Rosales", "Brassicales"])
+        rosales = flowering["children"][0]
         self.assertEqual((rosales["name"], rosales["eaten"], rosales["total"]), ("Rosales", 1, 2))
 
     def test_describe(self):

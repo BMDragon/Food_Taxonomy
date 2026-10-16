@@ -269,8 +269,10 @@ def coverage(root):
             group["total"] += 1
             group["eaten"] += eaten
     def finish(group):
-        group["children"] = sorted((finish(child) for child in group["children"].values()),
-                                   key=lambda child: (-child["total"], child["name"]))
+        # Groups with nothing eaten are left out; the kept groups' own totals still count
+        # every common food in them, so their share eaten stays honest
+        kept = [finish(child) for child in group["children"].values() if child["eaten"] > 0]
+        group["children"] = sorted(kept, key=lambda child: (-child["total"], child["name"]))
         return group
     return finish(top)
 

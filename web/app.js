@@ -606,9 +606,12 @@ function renderSunburst(top) {
       }
     }
     if (depth < RING_NAMES.length) {
+      // Groups with nothing eaten aren't included, so the shown children share the
+      // whole parent slice
+      const shown = group.children.reduce((sum, child) => sum + child.total, 0);
       let start = a0;
       for (const child of group.children) {
-        const end = start + ((a1 - a0) * child.total) / group.total;
+        const end = start + ((a1 - a0) * child.total) / shown;
         draw(child, depth + 1, start, end, [...path, child.name]);
         start = end;
       }
@@ -639,8 +642,9 @@ async function loadCoverage() {
         el("span", { class: `swatch step-${i}` }),
         `${Math.round((100 * i) / COVERAGE_STEPS)}–${Math.round((100 * (i + 1)) / COVERAGE_STEPS)}%`)));
     holder.replaceChildren(
-      el("p", { class: "muted" }, `Rings from the inside out: ${RING_NAMES.join(", ")}. Each slice is sized by how many common foods `
-        + "(from the common-foods list, plus anything else you've eaten) it holds, and shaded by how many of them you've eaten. Hover for details."),
+      el("p", { class: "muted" }, `Rings from the inside out: ${RING_NAMES.join(", ")}. Only groups you've eaten from are shown. Each slice is sized by `
+        + "how many common foods (from the common-foods list, plus anything else you've eaten) it holds, and shaded by "
+        + "how many of them you've eaten. Hover for details."),
       legend, renderSunburst(top));
   } catch (error) {
     holder.replaceChildren(banner("error", `Couldn't load coverage: ${error.message}`));
