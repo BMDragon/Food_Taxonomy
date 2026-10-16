@@ -26,7 +26,8 @@ common_foods_path = os.path.join(make_tree.script_dir, "common_foods.tsv")
 EXAMPLES = 3
 
 def load_common_foods():
-    # Returns [(food, species, [lineage names])] for entries whose lineage is filled in
+    # Returns [{"food", "species", "lineage": [names], "ranks": [NCBI ranks]}] for entries
+    # whose lineage is filled in ("ranks" is empty for entries looked up before ranks were stored)
     foods = []
     if os.path.exists(common_foods_path):
         with open(common_foods_path, 'r') as f:
@@ -35,17 +36,20 @@ def load_common_foods():
                     continue
                 parts = line.rstrip('\n').split('\t')
                 if len(parts) >= 3 and parts[2].strip():
-                    foods.append((parts[0], parts[1], [name.strip() for name in parts[2].split(';')]))
+                    lineage = [name.strip() for name in parts[2].split(';')]
+                    ranks = [rank.strip() for rank in parts[3].split(';')] if len(parts) >= 4 else []
+                    foods.append({"food": parts[0], "species": parts[1], "lineage": lineage,
+                                  "ranks": ranks if len(ranks) == len(lineage) else []})
     return foods
 
 def foods_by_taxon(foods):
-    # Maps each lowercased taxon name to the foods inside it
+    # Maps each lowercased taxon name to the foods inside it, as {"food", "species"}
     found = {}
-    for food, species, lineage in foods:
-        for name in lineage:
-            found.setdefault(name.lower(), [])
-            if food not in found[name.lower()]:
-                found[name.lower()].append(food)
+    for entry in foods:
+        for name in entry["lineage"]:
+            examples = found.setdefault(name.lower(), [])
+            if all(example["food"] != entry["food"] for example in examples):
+                examples.append({"food": entry["food"], "species": entry["species"]})
     return found
 
 def ncbi_summaries(ids):
@@ -151,11 +155,11 @@ def species_report(root, name):
         raise fetch_lineage.FetchError("species gaps need common_foods.tsv (run update_common_foods.py)")
     in_tree = tree_names(root)
     have, missing = [], []
-    for food, species, lineage in sorted(foods, key=lambda entry: entry[1]):
-        if name.lower() not in (taxon.lower() for taxon in lineage):
+    for food in sorted(foods, key=lambda entry: entry["species"]):
+        if name.lower() not in (taxon.lower() for taxon in food["lineage"]):
             continue
-        entry = {"name": species, "common": food}
-        (have if species.lower() in in_tree else missing).append(entry)
+        entry = {"name": food["species"], "common": food["food"]}
+        (have if food["species"].lower() in in_tree else missing).append(entry)
     return {"name": name, "rank": "species", "groups": have + missing, "have": have, "missing": missing,
             "hidden": 0, "filtered": False, "unknown": []}
 
@@ -188,18 +192,111 @@ def gap_report(root, taxon, rank=None, refresh=False, show_all=False):
 def describe(group):
     text = group["name"] + (f" ({group['common']})" if group["common"] else "")
     if group.get("examples"):
-        text += ": e.g. " + ", ".join(group["examples"])
+        text += ": e.g. " + ", ".join(example["food"] for example in group["examples"])
     return text
+
+# Ranks in the order they nest, for judging how new a branch is; "species" also covers
+# subspecies and varieties
+MAJOR_RANKS = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
+
+def suggestions(root, taxon=None, limit=None):
+    # Common foods not eaten yet, ranked by how much new tree they would add: first by the
+    # highest new major rank (a new class beats a new genus), then by how many new major
+    # ranks, then by how many new clades in all. Returns
+    # [{"food", "species", "new": [{"name", "rank"}], "new_major": {rank: name}}]
+    in_tree = tree_names(root)
+    results = []
+    for food in load_common_foods():
+        if food["species"].lower() in in_tree:
+            continue
+        if taxon and taxon.lower() not in (name.lower() for name in food["lineage"]):
+            continue
+        ranks = food["ranks"] or ["?"] * len(food["lineage"])
+        new = [{"name": name, "rank": rank} for name, rank in zip(food["lineage"], ranks)
+               if name.lower() not in in_tree]
+        new_major = {}
+        for clade in new:
+            rank = "species" if clade["rank"] in ("subspecies", "varietas") else clade["rank"]
+            if rank in MAJOR_RANKS and rank not in new_major:
+                new_major[rank] = clade["name"]
+        results.append({"food": food["food"], "species": food["species"], "new": new, "new_major": new_major})
+    def key(result):
+        highest = min((MAJOR_RANKS.index(rank) for rank in result["new_major"]), default=len(MAJOR_RANKS))
+        return (highest, -len(result["new_major"]), -len(result["new"]), result["food"])
+    results.sort(key=key)
+    return results[:limit] if limit else results
+
+def describe_suggestion(result):
+    added = ", ".join(f"+1 {rank} ({name})" for rank, name in result["new_major"].items())
+    count = len(result["new"])
+    return f"{result['food']} ({result['species']}): {added}; {count} new clade{'' if count == 1 else 's'} in all"
+
+COVERAGE_LEVELS = ["kingdom", "phylum", "class", "order"]
+COVERAGE_CODES = {"kingdom": "K", "phylum": "P", "class": "C", "order": "O"}
+
+def coverage(root):
+    # How many common foods (plus anything else eaten) each group holds and how many of
+    # them are eaten, as nested {"name", "rank", "eaten", "total", "children"} from the
+    # kingdom down to the order, for the coverage sunburst
+    in_tree = tree_names(root)
+    items = {}
+    for food in load_common_foods():
+        path = {rank: name for name, rank in zip(food["lineage"], food["ranks"]) if rank in COVERAGE_LEVELS}
+        items[food["species"].lower()] = (path, food["species"].lower() in in_tree)
+    # Organisms eaten that aren't on the list (or are a variety of a listed species)
+    stack = [(root, {}, None)]
+    while stack:
+        node, path, species = stack.pop()
+        path = dict(path)
+        for rank, code in COVERAGE_CODES.items():
+            if node.code == code:
+                path[rank] = node.value
+        if node.code == 'S':
+            species = node.value
+        if node.eaten and node.value.lower() not in items and (species or "").lower() not in items:
+            items[node.value.lower()] = (path, True)
+        for child in node.children.values():
+            stack.append((child, path, species))
+    top = {"name": root.value, "rank": "", "eaten": 0, "total": 0, "children": {}}
+    for path, eaten in items.values():
+        group = top
+        group["total"] += 1
+        group["eaten"] += eaten
+        for rank in COVERAGE_LEVELS:
+            name = path.get(rank, f"(no {rank})")
+            group = group["children"].setdefault(name, {"name": name, "rank": rank, "eaten": 0, "total": 0,
+                                                        "children": {}})
+            group["total"] += 1
+            group["eaten"] += eaten
+    def finish(group):
+        group["children"] = sorted((finish(child) for child in group["children"].values()),
+                                   key=lambda child: (-child["total"], child["name"]))
+        return group
+    return finish(top)
 
 def main():
     parser = argparse.ArgumentParser(description="List the groups within a taxon that aren't in the tree yet.")
-    parser.add_argument("taxon", help="a taxon such as Mammalia, Rosales or Metazoa")
+    parser.add_argument("taxon", nargs="?", help="a taxon such as Mammalia, Rosales or Metazoa")
     parser.add_argument("--rank", choices=GAP_RANKS,
                         help="rank of the groups to list (default: the next major rank below the taxon)")
     parser.add_argument("--refresh", action="store_true", help="ignore cached NCBI results")
     parser.add_argument("--all", action="store_true",
                         help="also list groups with no common foods (from common_foods.tsv)")
+    parser.add_argument("--suggest", type=int, nargs="?", const=20, metavar="N",
+                        help="instead, suggest the N common foods (default 20) that would add the most "
+                             "new branches to the tree, within the taxon if one is given")
     args = parser.parse_args()
+
+    if args.suggest is not None:
+        root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
+        results = suggestions(root, args.taxon, args.suggest)
+        where = f" in {args.taxon}" if args.taxon else ""
+        print(f"Common foods{where} that would add the most new branches:\n")
+        for result in results:
+            print("  " + describe_suggestion(result))
+        return
+    if not args.taxon:
+        parser.error("give a taxon, or use --suggest")
 
     try:
         root, _ = make_tree.build_tree(make_tree.taxonomy_dir)

@@ -13,6 +13,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 import fetch_lineage
+import gaps
 import make_tree
 import serve
 from test_make_tree import APPLE, SAMPLE, write_folder
@@ -153,6 +154,37 @@ class ServerTests(unittest.TestCase):
         status, body = self.request("/api/remove", {"filename": "human"})
         self.assertEqual(status, 400)
         self.assertIn("last organism", json.loads(body)["error"])
+
+    def use_common_foods(self, text):
+        saved = gaps.common_foods_path
+        gaps.common_foods_path = os.path.join(self.tmp.name, "common_foods.tsv")
+        self.addCleanup(setattr, gaps, "common_foods_path", saved)
+        with open(gaps.common_foods_path, 'w') as f:
+            f.write(text)
+
+    def test_suggest_and_coverage(self):
+        self.use_common_foods(
+            "squid\tLoligo vulgaris\tEukaryota; Metazoa; Mollusca; Cephalopoda; Myopsida; Loligo; Loligo vulgaris\t"
+            "domain; kingdom; phylum; class; order; genus; species\n")
+        suggestions = json.loads(self.request("/api/suggest")[1])["suggestions"]
+        self.assertEqual([s["food"] for s in suggestions], ["squid"])
+        self.assertEqual(suggestions[0]["new_major"]["phylum"], "Mollusca")
+        top = json.loads(self.request("/api/coverage")[1])
+        # The four sample organisms plus the squid
+        self.assertEqual((top["eaten"], top["total"]), (4, 5))
+
+    def test_add_looks_up_and_saves_in_one_step(self):
+        pear = APPLE[:-2] + ["Pyrus; G", "Pyrus communis; S"]
+        saved = fetch_lineage.prepare
+        fetch_lineage.prepare = lambda name, filename=None, force=False: {
+            "filename": fetch_lineage.clean_filename(filename or "pear"), "text": "\n".join(pear),
+            "ncbi_name": name, "taxid": "1", "note": None}
+        self.addCleanup(setattr, fetch_lineage, "prepare", saved)
+        status, body = self.request("/api/add", {"name": "Pyrus communis", "filename": "pear"})
+        self.assertEqual(status, 200, body)
+        self.assertEqual(json.loads(body)["filename"], "pear.txt")
+        self.assertTrue(os.path.exists(os.path.join(self.folder, "pear.txt")))
+        self.assertEqual(self.request("/api/add", {"name": ""})[0], 400)
 
     def test_bad_requests(self):
         self.assertEqual(self.request("/api/nope")[0], 404)

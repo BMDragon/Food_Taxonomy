@@ -39,13 +39,15 @@ class GapTests(unittest.TestCase):
         self.assertEqual(unknown, ["Lagomorpha"])
 
     def test_missing_groups_filtered_to_common_foods(self):
-        foods = [("guinea pig", "Cavia porcellus", ["Eukaryota", "Mammalia", "Rodentia", "Caviidae", "Cavia porcellus"]),
-                 ("beef", "Bos taurus", ["Eukaryota", "Mammalia", "Artiodactyla", "Bovidae", "Bos taurus"])]
+        foods = [{"food": "guinea pig", "species": "Cavia porcellus", "ranks": [],
+                  "lineage": ["Eukaryota", "Mammalia", "Rodentia", "Caviidae", "Cavia porcellus"]},
+                 {"food": "beef", "species": "Bos taurus", "ranks": [],
+                  "lineage": ["Eukaryota", "Mammalia", "Artiodactyla", "Bovidae", "Bos taurus"]}]
         missing = [{"name": "Rodentia", "common": "rodents"}, {"name": "Notoryctemorphia", "common": ""}]
         edible = gaps.foods_by_taxon(foods)
         shown, hidden = gaps.filter_missing(missing, edible, show_all=False)
         self.assertEqual([group["name"] for group in shown], ["Rodentia"])
-        self.assertEqual(shown[0]["examples"], ["guinea pig"])
+        self.assertEqual(shown[0]["examples"], [{"food": "guinea pig", "species": "Cavia porcellus"}])
         self.assertEqual(hidden, 1)
         shown, hidden = gaps.filter_missing(missing, edible, show_all=True)
         self.assertEqual([group["name"] for group in shown], ["Rodentia", "Notoryctemorphia"])
@@ -73,6 +75,43 @@ class GapTests(unittest.TestCase):
             self.assertEqual([entry["common"] for entry in report["missing"]], ["kohlrabi"])
         finally:
             gaps.common_foods_path = saved
+
+    def write_common_foods(self, text):
+        saved = gaps.common_foods_path
+        gaps.common_foods_path = os.path.join(self.tmp.name, "common_foods.tsv")
+        self.addCleanup(setattr, gaps, "common_foods_path", saved)
+        with open(gaps.common_foods_path, 'w') as f:
+            f.write(text)
+
+    def test_suggestions_rank_by_highest_new_branch(self):
+        # Sample tree: human, chicken, apple, broccoli
+        self.write_common_foods(
+            "apple\tMalus domestica\tEukaryota; Metazoa; Malus; Malus domestica\tdomain; kingdom; genus; species\n"
+            "sheep\tOvis aries\tEukaryota; Metazoa; Chordata; Mammalia; Artiodactyla; Bovidae; Ovis; Ovis aries\t"
+            "domain; kingdom; phylum; class; order; family; genus; species\n"
+            "chimp\tPan troglodytes\tEukaryota; Metazoa; Chordata; Mammalia; Primates; Hominidae; Pan; Pan troglodytes\t"
+            "domain; kingdom; phylum; class; order; family; genus; species\n"
+            "squid\tLoligo vulgaris\tEukaryota; Metazoa; Mollusca; Cephalopoda; Myopsida; Loliginidae; Loligo; Loligo vulgaris\t"
+            "domain; kingdom; phylum; class; order; family; genus; species\n")
+        results = gaps.suggestions(self.root)
+        # Apple is already eaten; squid adds a phylum, sheep an order, chimp only a genus
+        self.assertEqual([r["food"] for r in results], ["squid", "sheep", "chimp"])
+        self.assertEqual(results[0]["new_major"]["phylum"], "Mollusca")
+        self.assertEqual(results[2]["new_major"], {"genus": "Pan", "species": "Pan troglodytes"})
+        self.assertEqual([r["food"] for r in gaps.suggestions(self.root, "Mammalia", limit=1)], ["sheep"])
+
+    def test_coverage_counts_common_and_eaten_foods(self):
+        self.write_common_foods(
+            "apple\tMalus domestica\tEukaryota; Viridiplantae; Streptophyta; Magnoliopsida; Rosales; Malus; "
+            "Malus domestica\tdomain; kingdom; phylum; class; order; genus; species\n"
+            "pear\tPyrus communis\tEukaryota; Viridiplantae; Streptophyta; Magnoliopsida; Rosales; Pyrus; "
+            "Pyrus communis\tdomain; kingdom; phylum; class; order; genus; species\n")
+        top = gaps.coverage(self.root)
+        # Apple and pear from the list, plus human, chicken and broccoli from the tree
+        self.assertEqual((top["eaten"], top["total"]), (4, 5))
+        plants = next(child for child in top["children"] if child["name"] == "Viridiplantae")
+        rosales = plants["children"][0]["children"][0]["children"][0]
+        self.assertEqual((rosales["name"], rosales["eaten"], rosales["total"]), ("Rosales", 1, 2))
 
     def test_describe(self):
         self.assertEqual(gaps.describe(MAMMAL_ORDERS[1]), "Carnivora (carnivores)")

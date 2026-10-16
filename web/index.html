@@ -14,6 +14,7 @@
       <button role="tab" data-tab="tree">Tree</button>
       <button role="tab" data-tab="cladogram">Cladogram</button>
       <button role="tab" data-tab="stats">Stats</button>
+      <button role="tab" data-tab="relatives">Relatives</button>
       <button role="tab" data-tab="add">Add organism</button>
       <button role="tab" data-tab="gaps">Gaps</button>
     </nav>
@@ -55,6 +56,25 @@
           <div class="scroll"><table id="stats-kingdoms"></table></div>
         </div>
       </div>
+      <h2>Coverage</h2>
+      <div class="sunburst-wrap">
+        <div id="sunburst"></div>
+        <div id="sunburst-tip" class="tooltip" hidden></div>
+      </div>
+    </section>
+
+    <section id="tab-relatives" class="panel" role="tabpanel" hidden>
+      <form id="relatives-form" class="form inline">
+        <label>Food or organism
+          <input id="rel-a" list="rel-options" placeholder="e.g. shiitake">
+        </label>
+        <label>Compare with
+          <input id="rel-b" list="rel-options" placeholder="optional, e.g. human">
+        </label>
+        <datalist id="rel-options"></datalist>
+        <button type="submit">Show relatives</button>
+      </form>
+      <div id="relatives-result"></div>
     </section>
 
     <section id="tab-add" class="panel" role="tabpanel" hidden>
@@ -92,7 +112,9 @@
         <label class="check"><input id="gaps-all" type="checkbox"> Include groups with no common foods</label>
         <label class="check"><input id="gaps-refresh" type="checkbox"> Refresh from NCBI</label>
         <button type="submit">Find gaps</button>
+        <button type="button" id="suggest-button" class="secondary">Suggest foods to try</button>
       </form>
+      <div id="suggest-result"></div>
       <div id="gaps-result"></div>
     </section>
   </main>

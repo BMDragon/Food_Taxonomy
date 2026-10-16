@@ -48,6 +48,18 @@ def rebuild():
         pass
     return root, warnings, depths
 
+# The data behind the Tree and Stats tabs; export_site.py builds the static copy from these too
+def tree_payload():
+    root, warnings = make_tree.build_tree(make_tree.taxonomy_dir)
+    return {"tree": node_json(root, make_tree.load_meanings()), "warnings": warnings, "files": leaf_files(),
+            "ranks": list(make_tree.RANK_ORDER), "rankNames": make_tree.RANK_NAMES}
+
+def stats_payload():
+    root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
+    kingdoms, totals = make_tree.collect_stats(root)
+    return {"kingdoms": kingdoms, "totals": totals,
+            "ranks": list(make_tree.RANK_ORDER), "rankPlurals": make_tree.RANK_PLURALS}
+
 class ApiError(Exception):
     pass
 
@@ -106,6 +118,9 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/api/lookup"): self.api_lookup,
             ("POST", "/api/save"): self.api_save,
             ("POST", "/api/remove"): self.api_remove,
+            ("POST", "/api/add"): self.api_add,
+            ("GET", "/api/suggest"): self.api_suggest,
+            ("GET", "/api/coverage"): self.api_coverage,
         }
         route = routes.get(("GET" if body is None else "POST", path))
         if route is None:
@@ -118,17 +133,11 @@ class Handler(BaseHTTPRequestHandler):
     def api_tree(self, query, body):
         # Only reads the files; taxon_tree.txt and the PNGs are rebuilt when organisms change
         with files_lock:
-            root, warnings = make_tree.build_tree(make_tree.taxonomy_dir)
-            files = leaf_files()
-        self.send_json({"tree": node_json(root, make_tree.load_meanings()), "warnings": warnings, "files": files,
-                        "ranks": list(make_tree.RANK_ORDER), "rankNames": make_tree.RANK_NAMES})
+            self.send_json(tree_payload())
 
     def api_stats(self, query, body):
         with files_lock:
-            root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
-        kingdoms, totals = make_tree.collect_stats(root)
-        self.send_json({"kingdoms": kingdoms, "totals": totals,
-                        "ranks": list(make_tree.RANK_ORDER), "rankPlurals": make_tree.RANK_PLURALS})
+            self.send_json(stats_payload())
 
     def api_cladogram(self, query, body):
         major = query.get("major", ["0"])[0] == "1"
@@ -166,13 +175,10 @@ class Handler(BaseHTTPRequestHandler):
             result = fetch_lineage.prepare(name, filename, bool(body.get("force")))
         self.send_json(result)
 
-    def api_save(self, query, body):
-        filename = str(body.get("filename", "")).strip()
-        text = str(body.get("text", ""))
-        if not filename or not text.strip():
-            raise ApiError("nothing to save; look the organism up first")
+    def save_and_rebuild(self, filename, text, force):
+        # Saves a taxonomy file and rebuilds the outputs; returns (file name, warnings)
         with files_lock:
-            filename = fetch_lineage.save(filename, text, bool(body.get("force")))
+            filename = fetch_lineage.save(filename, text, force)
             # Keep the files valid: a lineage that breaks the tree is removed again
             try:
                 _, warnings, _ = rebuild()
@@ -186,7 +192,37 @@ class Handler(BaseHTTPRequestHandler):
                 fetch_lineage.fill_meanings(text)
         except fetch_lineage.FetchError:
             pass
+        return filename, warnings
+
+    def api_save(self, query, body):
+        filename = str(body.get("filename", "")).strip()
+        text = str(body.get("text", ""))
+        if not filename or not text.strip():
+            raise ApiError("nothing to save; look the organism up first")
+        filename, warnings = self.save_and_rebuild(filename, text, bool(body.get("force")))
         self.send_json({"filename": filename, "warnings": warnings})
+
+    def api_add(self, query, body):
+        # Looks an organism up and saves it in one step (the Add buttons in Gaps)
+        name = str(body.get("name", "")).strip()
+        if not name:
+            raise ApiError("no organism given")
+        with ncbi_lock:
+            result = fetch_lineage.prepare(name, str(body.get("filename", "")).strip() or None)
+        filename, warnings = self.save_and_rebuild(result["filename"], result["text"], False)
+        self.send_json({"filename": filename, "ncbi_name": result["ncbi_name"], "warnings": warnings})
+
+    def api_suggest(self, query, body):
+        taxon = query.get("taxon", [""])[0].strip() or None
+        limit = int(query.get("limit", ["30"])[0] or 30)
+        with files_lock:
+            root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
+        self.send_json({"taxon": taxon, "suggestions": gaps.suggestions(root, taxon, limit)})
+
+    def api_coverage(self, query, body):
+        with files_lock:
+            root, _ = make_tree.build_tree(make_tree.taxonomy_dir)
+        self.send_json(gaps.coverage(root))
 
     def api_remove(self, query, body):
         # Deletes one taxonomy file and rebuilds the tree. The file's text is sent

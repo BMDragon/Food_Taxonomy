@@ -24,6 +24,12 @@ function el(tag, attrs, ...children) {
 }
 
 async function api(path, body) {
+  // The static copy made by export_site.py has its data built in and no server
+  if (window.STATIC_DATA) {
+    const data = window.STATIC_DATA[path.split("?")[0]];
+    if (!data) throw new Error("not available in this static copy of the site");
+    return data;
+  }
   const options = { headers: {} };
   if (body !== undefined) {
     options.method = "POST";
@@ -74,8 +80,9 @@ function showTab(name) {
     button.setAttribute("aria-selected", selected);
     document.getElementById(`tab-${button.dataset.tab}`).hidden = !selected;
   }
-  if (name === "stats") loadStats();
+  if (name === "stats") { loadStats(); loadCoverage(); }
   if (name === "cladogram") loadCladogram();
+  if (name === "relatives" && treeData) fillRelativesOptions();
 }
 
 for (const button of document.querySelectorAll(".tabs button")) {
@@ -203,6 +210,7 @@ async function loadTree() {
   collect(treeData.tree);
   document.getElementById("gaps-taxa").replaceChildren(...options.sort().map((name) => el("option", { value: name })));
   renderTree();
+  fillRelativesOptions();
 }
 
 const treeStatus = document.getElementById("tree-status");
@@ -251,7 +259,8 @@ function loadCladogram() {
   const key = `${major}:${treeData ? treeData.tree.leaves : ""}`;
   if (key === cladogramKey) return;
   cladogramKey = key;
-  const src = `/api/cladogram.svg?major=${major}&v=${Date.now()}`;
+  const src = window.STATIC_DATA ? (major ? "cladogram_major.svg" : "cladogram_full.svg")
+    : `/api/cladogram.svg?major=${major}&v=${Date.now()}`;
   const img = document.getElementById("clado-img");
   img.parentElement.classList.toggle("natural", !major);
   const status = document.getElementById("clado-status");
@@ -370,15 +379,21 @@ document.getElementById("gaps-form").addEventListener("submit", async (event) =>
   gapsResult.replaceChildren(el("p", { class: "muted" }, "Looking up NCBI (the first lookup of a group can take a few seconds)…"));
   try {
     const report = await api(`/api/gaps?${params}`);
-    const describe = (group) => el("li", {}, el("i", {}, group.name),
+    const speciesLevel = report.rank === "species";
+    const describe = (group, missing) => el("li", {}, el("i", {}, group.name),
       group.common ? el("span", { class: "muted" }, ` (${group.common})`) : null,
-      group.examples && group.examples.length ? el("span", {}, `: e.g. ${group.examples.join(", ")}`) : null);
+      // At the species level each line is a food that can be added directly
+      missing && speciesLevel ? addButton(group.name, group.common) : null,
+      group.examples && group.examples.length
+        ? el("span", {}, ": e.g. ", group.examples.map((example, i) => [
+            i ? ", " : "", example.food, missing ? addButton(example.species, example.food) : null]))
+        : null);
     const missingTitle = report.filtered ? "Not eaten yet, with common foods" : "Not eaten yet";
     gapsResult.replaceChildren(el("div", { class: "card" },
       el("h2", { style: "margin-top:0" }, `${report.name}: ${report.have.length} of ${report.total} ${report.plural} eaten`),
       el("div", { class: `gap-lists${report.missing.length > 20 ? " cols" : ""}` },
-        el("div", {}, el("h3", {}, `Eaten (${report.have.length})`), el("ul", {}, report.have.map(describe))),
-        el("div", {}, el("h3", {}, `${missingTitle} (${report.missing.length})`), el("ul", {}, report.missing.map(describe)))),
+        el("div", {}, el("h3", {}, `Eaten (${report.have.length})`), el("ul", {}, report.have.map((g) => describe(g, false)))),
+        el("div", {}, el("h3", {}, `${missingTitle} (${report.missing.length})`), el("ul", {}, report.missing.map((g) => describe(g, true))))),
       report.hidden
         ? el("p", { class: "muted" }, `${report.hidden} more ${report.plural} with no common foods aren't shown. ` +
             "Tick “Include groups with no common foods” to list them.")
@@ -393,7 +408,257 @@ document.getElementById("gaps-form").addEventListener("submit", async (event) =>
   }
 });
 
+// An "Add" button that looks the species up on NCBI and saves it in one step,
+// using the food name as the file name
+function addButton(species, food) {
+  const button = el("button", { type: "button", class: "add-inline", title: `Add ${food} (${species}) to the tree` }, "Add");
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    button.textContent = "Adding…";
+    try {
+      const added = await api("/api/add", { name: species, filename: food });
+      button.replaceWith(el("span", { class: "added" }, `✓ added as ${added.filename}`));
+      cladogramKey = null;
+      loadTree();
+    } catch (error) {
+      button.replaceWith(el("span", { class: "add-error" }, `✗ ${error.message}`));
+    }
+  });
+  return button;
+}
+
+// ---------- suggestions ----------
+
+const RANK_LABELS = { kingdom: "kingdom", phylum: "phylum", class: "class", order: "order", family: "family",
+  genus: "genus", species: "species" };
+
+document.getElementById("suggest-button").addEventListener("click", async (event) => {
+  const button = event.target;
+  const taxon = document.getElementById("gaps-taxon").value.trim();
+  const output = document.getElementById("suggest-result");
+  button.disabled = true;
+  output.replaceChildren(el("p", { class: "muted" }, "Ranking common foods…"));
+  try {
+    const result = await api(`/api/suggest?${new URLSearchParams({ taxon, limit: "30" })}`);
+    if (!result.suggestions.length) {
+      output.replaceChildren(el("p", { class: "muted" }, "You've eaten every common food here."));
+      return;
+    }
+    output.replaceChildren(el("div", { class: "card" },
+      el("h2", { style: "margin-top:0" }, `Foods that would add the most new branches${taxon ? ` in ${taxon}` : ""}`),
+      el("p", { class: "muted" }, "Ranked by the highest new rank each would add (a new class beats a new genus), then by how many new clades."),
+      el("ol", { class: "suggestions" }, result.suggestions.map((s) => el("li", {},
+        el("strong", {}, s.food), " ", el("i", { class: "muted" }, s.species), addButton(s.species, s.food),
+        el("div", { class: "chips" },
+          Object.entries(s.new_major).map(([rank, name]) => el("span", { class: "chip" }, `new ${RANK_LABELS[rank]}: ${name}`)),
+          el("span", { class: "muted" }, ` ${plural(s.new.length, "new clade", "new clades")} in all`)))))));
+  } catch (error) {
+    output.replaceChildren(banner("error", error.message));
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// ---------- relatives ----------
+
+// Every organism as {name, foods, path: [nodes from the root]}
+function organisms() {
+  const found = [];
+  const walk = (node, path) => {
+    const here = [...path, node];
+    if (node.eaten || node.children.length === 0) {
+      found.push({ name: node.name, foods: (treeData.files[node.name] || []).map(foodName), path: here });
+    }
+    node.children.forEach((child) => walk(child, here));
+  };
+  walk(treeData.tree, []);
+  return found;
+}
+
+function organismLabel(organism) {
+  return organism.foods.length ? `${organism.foods.join(", ")} (${organism.name})` : organism.name;
+}
+
+function findOrganism(text) {
+  const query = text.trim().toLowerCase();
+  if (!query) return null;
+  const all = organisms();
+  return all.find((o) => organismLabel(o).toLowerCase() === query)
+    || all.find((o) => o.foods.some((f) => f.toLowerCase() === query) || o.name.toLowerCase() === query)
+    || all.find((o) => organismLabel(o).toLowerCase().includes(query));
+}
+
+// The deepest node two organisms share, and the index of it in their paths
+function sharedAncestor(a, b) {
+  let i = 0;
+  while (i < a.path.length && i < b.path.length && a.path[i] === b.path[i]) i++;
+  return i - 1;
+}
+
+function cladeLabel(node) {
+  // Organisms without a formal rank (subspecies, varieties) get no rank tag
+  const rank = node.code ? treeData.rankNames[node.code].toLowerCase() : node.eaten ? "" : "clade";
+  return [el("strong", {}, node.name), node.meaning ? ` (${node.meaning})` : "", rank ? el("span", { class: "rank" }, rank) : null];
+}
+
+function renderRelatives() {
+  const output = document.getElementById("relatives-result");
+  if (!treeData) return;
+  const a = findOrganism(document.getElementById("rel-a").value);
+  const b = findOrganism(document.getElementById("rel-b").value);
+  const typed = document.getElementById("rel-a").value.trim();
+  if (!a) {
+    output.replaceChildren(el("p", { class: "muted" }, typed
+      ? `Nothing in your tree matches “${typed}”. Pick a food or organism from the suggestions.`
+      : "Pick a food or organism from your tree."));
+    return;
+  }
+  const parts = [];
+  if (b && b.name !== a.name) {
+    const at = sharedAncestor(a, b);
+    const ancestor = a.path[at];
+    parts.push(el("div", { class: "card" },
+      el("h2", { style: "margin-top:0" }, `${organismLabel(a)} and ${organismLabel(b)}`),
+      el("p", {}, "Closest shared ancestor: ", cladeLabel(ancestor)),
+      el("div", { class: "columns two" },
+        [a, b].map((o) => el("div", {}, el("h3", {}, `From there to ${o.foods[0] || o.name}`),
+          el("ol", { class: "lineage" }, o.path.slice(at + 1).map((node) => el("li", {}, cladeLabel(node)))))))));
+  }
+  // The organisms that share the deepest ancestor with a
+  const others = organisms().filter((o) => o.name !== a.name);
+  const best = Math.max(...others.map((o) => sharedAncestor(a, o)));
+  const closest = others.filter((o) => sharedAncestor(a, o) === best);
+  parts.push(el("div", { class: "card" },
+    el("h2", { style: "margin-top:0" }, `Closest relatives of ${organismLabel(a)} in your tree`),
+    el("p", {}, "They share: ", cladeLabel(a.path[best])),
+    el("ul", {}, closest.map((o) => el("li", {}, organismLabel(o))))));
+  output.replaceChildren(...parts);
+  const params = new URLSearchParams({ a: document.getElementById("rel-a").value, b: document.getElementById("rel-b").value });
+  history.replaceState(null, "", `${location.search}#relatives?${params}`);
+}
+
+function fillRelativesOptions() {
+  const options = organisms().map((o) => el("option", { value: organismLabel(o) }));
+  document.getElementById("rel-options").replaceChildren(...options);
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  if (params.get("a")) document.getElementById("rel-a").value = params.get("a");
+  if (params.get("b")) document.getElementById("rel-b").value = params.get("b");
+  renderRelatives();
+}
+
+document.getElementById("relatives-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  renderRelatives();
+});
+
+// ---------- coverage sunburst ----------
+
+const COVERAGE_STEPS = 6;
+const RING_NAMES = ["Kingdom", "Phylum", "Class", "Order"];
+
+function coverageStep(group) {
+  // 0..5: share of the group's foods eaten, in six bins
+  return Math.min(COVERAGE_STEPS - 1, Math.floor((group.eaten / group.total) * COVERAGE_STEPS));
+}
+
+function arcPath(r0, r1, a0, a1) {
+  const point = (r, a) => `${(r * Math.sin(a)).toFixed(2)},${(-r * Math.cos(a)).toFixed(2)}`;
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  return `M${point(r1, a0)}A${r1},${r1} 0 ${large} 1 ${point(r1, a1)}L${point(r0, a1)}A${r0},${r0} 0 ${large} 0 ${point(r0, a0)}Z`;
+}
+
+function renderSunburst(top) {
+  const svgNS = "http://www.w3.org/2000/svg";
+  const size = 520, center = 70, ring = (size / 2 - center) / RING_NAMES.length;
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", `${-size / 2} ${-size / 2} ${size} ${size}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", `Sunburst of ${top.total} common and eaten foods by kingdom, phylum, class and order, shaded by share eaten`);
+  const tooltip = document.getElementById("sunburst-tip");
+  const show = (event, group, path) => {
+    tooltip.hidden = false;
+    tooltip.replaceChildren(el("strong", {}, group.name), el("span", { class: "muted" }, ` ${group.rank}`),
+      el("div", {}, `${group.eaten} of ${group.total} eaten (${Math.round((100 * group.eaten) / group.total)}%)`),
+      path.length > 1 ? el("div", { class: "muted" }, path.slice(0, -1).join(" › ")) : null);
+    const box = svg.parentElement.getBoundingClientRect();
+    tooltip.style.left = `${Math.min(event.clientX - box.left + 14, box.width - 220)}px`;
+    tooltip.style.top = `${event.clientY - box.top + 14}px`;
+  };
+  const draw = (group, depth, a0, a1, path) => {
+    if (depth > 0) {
+      const shape = document.createElementNS(svgNS, "path");
+      shape.setAttribute("d", arcPath(center + (depth - 1) * ring, center + depth * ring, a0, a1));
+      shape.setAttribute("class", `seg step-${coverageStep(group)}`);
+      shape.addEventListener("mousemove", (event) => show(event, group, path));
+      shape.addEventListener("mouseleave", () => { tooltip.hidden = true; });
+      svg.append(shape);
+      // Label segments with room for the name
+      const middle = (a0 + a1) / 2, radius = center + (depth - 0.5) * ring;
+      if ((a1 - a0) * radius > group.name.length * 6.2 && ring > 20) {
+        const label = document.createElementNS(svgNS, "text");
+        // Text runs along the ring, flipped on the lower half so it's never upside down
+        let rotate = (middle * 180) / Math.PI;
+        if (rotate > 90 && rotate < 270) rotate += 180;
+        label.setAttribute("transform", `translate(${(radius * Math.sin(middle)).toFixed(1)},${(-radius * Math.cos(middle)).toFixed(1)}) rotate(${rotate.toFixed(1)})`);
+        label.setAttribute("class", `seg-label step-${coverageStep(group)}`);
+        label.textContent = group.name;
+        svg.append(label);
+      }
+    }
+    if (depth < RING_NAMES.length) {
+      let start = a0;
+      for (const child of group.children) {
+        const end = start + ((a1 - a0) * child.total) / group.total;
+        draw(child, depth + 1, start, end, [...path, child.name]);
+        start = end;
+      }
+    }
+  };
+  draw(top, 0, 0, 2 * Math.PI, []);
+  const middle = document.createElementNS(svgNS, "text");
+  middle.setAttribute("class", "sun-center");
+  middle.setAttribute("text-anchor", "middle");
+  middle.innerHTML = "";
+  for (const [dy, text] of [[-6, `${Math.round((100 * top.eaten) / top.total)}%`], [14, "eaten"]]) {
+    const line = document.createElementNS(svgNS, "tspan");
+    line.setAttribute("x", "0");
+    line.setAttribute("y", String(dy));
+    line.textContent = text;
+    middle.append(line);
+  }
+  svg.append(middle);
+  return svg;
+}
+
+async function loadCoverage() {
+  const holder = document.getElementById("sunburst");
+  try {
+    const top = await api("/api/coverage");
+    const legend = el("div", { class: "legend" }, el("span", { class: "muted" }, "Share of foods eaten: "),
+      Array.from({ length: COVERAGE_STEPS }, (_, i) => el("span", { class: "legend-item" },
+        el("span", { class: `swatch step-${i}` }),
+        `${Math.round((100 * i) / COVERAGE_STEPS)}–${Math.round((100 * (i + 1)) / COVERAGE_STEPS)}%`)));
+    holder.replaceChildren(
+      el("p", { class: "muted" }, `Rings from the inside out: ${RING_NAMES.join(", ")}. Each slice is sized by how many common foods `
+        + "(from the common-foods list, plus anything else you've eaten) it holds, and shaded by how many of them you've eaten. Hover for details."),
+      legend, renderSunburst(top));
+  } catch (error) {
+    holder.replaceChildren(banner("error", `Couldn't load coverage: ${error.message}`));
+  }
+}
+
 // ---------- start ----------
 
-showTab(["tree", "cladogram", "stats", "add", "gaps"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "tree");
+const TABS = ["tree", "cladogram", "stats", "relatives", "add", "gaps"];
+if (window.STATIC_DATA) document.body.classList.add("static");
+const startTab = location.hash.slice(1).split("?")[0];
+showTab(TABS.includes(startTab) ? startTab : "tree");
 loadTree();
+// Links like #gaps?taxon=Rosaceae&rank=species (and &suggest=1) run those reports on load
+if (startTab === "gaps") {
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  if (params.get("taxon")) document.getElementById("gaps-taxon").value = params.get("taxon");
+  if (params.get("rank")) document.getElementById("gaps-rank").value = params.get("rank");
+  if (params.get("suggest")) document.getElementById("suggest-button").click();
+  if (params.get("taxon")) document.getElementById("gaps-form").requestSubmit();
+}

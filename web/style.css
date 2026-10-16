@@ -9,6 +9,13 @@
   --accent: #2a78d6;
   --accent-text: #ffffff;
   --warn-bg: #fff4d6;
+  /* Coverage sunburst: share of foods eaten, in six steps */
+  --seq-0: #b7d3f6; --seq-text-0: #0b0b0b;
+  --seq-1: #86b6ef; --seq-text-1: #0b0b0b;
+  --seq-2: #5598e7; --seq-text-2: #0b0b0b;
+  --seq-3: #2a78d6; --seq-text-3: #ffffff;
+  --seq-4: #1c5cab; --seq-text-4: #ffffff;
+  --seq-5: #104281; --seq-text-5: #ffffff;
   --warn-border: #eda100;
   --error-bg: #fde8e7;
   --error-border: #e34948;
@@ -32,6 +39,13 @@
     --text-muted: #9a998f;
     --accent: #3987e5;
     --warn-bg: #3a2f10;
+    /* Coverage sunburst: share of foods eaten, in six steps */
+    --seq-0: #104281; --seq-text-0: #ffffff;
+    --seq-1: #1c5cab; --seq-text-1: #ffffff;
+    --seq-2: #2a78d6; --seq-text-2: #ffffff;
+    --seq-3: #5598e7; --seq-text-3: #0b0b0b;
+    --seq-4: #86b6ef; --seq-text-4: #0b0b0b;
+    --seq-5: #b7d3f6; --seq-text-5: #0b0b0b;
     --error-bg: #3d1b1b;
     --ok-bg: #133227;
     --mark: #5c4e12;
@@ -51,6 +65,13 @@
   --text-muted: #9a998f;
   --accent: #3987e5;
   --warn-bg: #3a2f10;
+  /* Coverage sunburst: share of foods eaten, in six steps */
+  --seq-0: #104281; --seq-text-0: #ffffff;
+  --seq-1: #1c5cab; --seq-text-1: #ffffff;
+  --seq-2: #2a78d6; --seq-text-2: #ffffff;
+  --seq-3: #5598e7; --seq-text-3: #0b0b0b;
+  --seq-4: #86b6ef; --seq-text-4: #0b0b0b;
+  --seq-5: #b7d3f6; --seq-text-5: #0b0b0b;
   --error-bg: #3d1b1b;
   --ok-bg: #133227;
   --mark: #5c4e12;
@@ -167,3 +188,52 @@ tr:last-child td { border-bottom: none; }
   .tree ul { padding-left: .6rem; }
   .tree .count { display: none; }
 }
+
+/* Add buttons in Gaps and suggestions */
+.add-inline { margin-left: .45rem; padding: 0 .5rem; font-size: .78em; line-height: 1.6; border-radius: 4px; }
+.added { margin-left: .45rem; color: var(--ok-border); font-size: .85em; }
+.add-error { margin-left: .45rem; color: var(--error-border); font-size: .85em; }
+.suggestions li { margin-bottom: .55rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin-top: .2rem; }
+.chip { font-size: .8em; padding: .05rem .5rem; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-0); }
+#suggest-result .card, #gaps-result .card { margin-bottom: 1rem; }
+
+/* Relatives */
+.columns.two { grid-template-columns: 1fr 1fr; }
+.lineage { padding-left: 1.4rem; margin: .25rem 0; }
+.lineage li { margin: .15rem 0; }
+#relatives-result .rank, #relatives-result + * .rank, .card .rank {
+  color: var(--text-muted); font-size: .72em; text-transform: uppercase; letter-spacing: .04em; margin-left: .45rem;
+}
+
+/* Coverage sunburst */
+.sunburst-wrap { position: relative; max-width: 640px; }
+#sunburst svg { width: 100%; height: auto; display: block; }
+.seg { stroke: var(--surface-0); stroke-width: 2; cursor: default; }
+.seg:hover { stroke: var(--text-primary); stroke-width: 1.5; }
+.seg.step-0, .swatch.step-0 { fill: var(--seq-0); background: var(--seq-0); }
+.seg-label.step-0 { fill: var(--seq-text-0); }
+.seg.step-1, .swatch.step-1 { fill: var(--seq-1); background: var(--seq-1); }
+.seg-label.step-1 { fill: var(--seq-text-1); }
+.seg.step-2, .swatch.step-2 { fill: var(--seq-2); background: var(--seq-2); }
+.seg-label.step-2 { fill: var(--seq-text-2); }
+.seg.step-3, .swatch.step-3 { fill: var(--seq-3); background: var(--seq-3); }
+.seg-label.step-3 { fill: var(--seq-text-3); }
+.seg.step-4, .swatch.step-4 { fill: var(--seq-4); background: var(--seq-4); }
+.seg-label.step-4 { fill: var(--seq-text-4); }
+.seg.step-5, .swatch.step-5 { fill: var(--seq-5); background: var(--seq-5); }
+.seg-label.step-5 { fill: var(--seq-text-5); }
+.seg-label { font-size: 10px; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.sun-center { fill: var(--text-primary); font-size: 18px; font-weight: 650; }
+.sun-center tspan + tspan { font-size: 12px; font-weight: 400; fill: var(--text-secondary); }
+.legend { display: flex; flex-wrap: wrap; gap: .3rem .8rem; align-items: center; margin: .5rem 0; font-size: .85em; }
+.legend-item { display: inline-flex; align-items: center; gap: .3rem; color: var(--text-secondary); }
+.swatch { display: inline-block; width: .9rem; height: .9rem; border-radius: 3px; }
+.tooltip {
+  position: absolute; z-index: 5; pointer-events: none; max-width: 210px; font-size: .85em;
+  background: var(--surface-1); border: 1px solid var(--border); border-radius: 6px; padding: .4rem .6rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+
+/* The static copy (export_site.py) has no server: hide everything that changes files */
+.static [data-tab="add"], .static [data-tab="gaps"], .static .remove, .static .add-inline { display: none; }

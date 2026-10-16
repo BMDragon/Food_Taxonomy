@@ -24,7 +24,8 @@ def main():
         if not species:
             failed.append(f"{food}: no scientific name")
             continue
-        if len(parts) >= 3 and parts[2].strip() and not args.refresh:
+        # Columns 3 and 4 are the lineage names and their NCBI ranks
+        if len(parts) >= 4 and parts[2].strip() and parts[3].strip() and not args.refresh:
             continue
         try:
             lineage, _ = fetch_lineage.fetch_taxon(fetch_lineage.find_taxid(species))
@@ -36,7 +37,8 @@ def main():
             continue
         if lineage[-1][0] != species:
             print(f"note: {species} is listed in NCBI as {lineage[-1][0]}")
-        lines[i] = f"{food}\t{lineage[-1][0]}\t" + "; ".join(name for name, _ in lineage)
+        lines[i] = (f"{food}\t{lineage[-1][0]}\t" + "; ".join(name for name, _ in lineage)
+                    + "\t" + "; ".join(rank for _, rank in lineage))
         updated += 1
         print(f"looked up {food} ({lineage[-1][0]})")
     with open(gaps.common_foods_path, 'w') as f:

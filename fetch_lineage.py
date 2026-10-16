@@ -30,13 +30,18 @@ last_request = 0.0
 class FetchError(Exception):
     pass
 
+class NcbiUnavailable(FetchError):
+    # NCBI couldn't be reached or kept refusing (as opposed to a name not being found)
+    pass
+
 def ncbi_get(endpoint, params):
     global last_request
     params = dict(params, db="taxonomy")
     if api_key:
         params["api_key"] = api_key
     url = EUTILS + endpoint + "?" + urllib.parse.urlencode(params)
-    for attempt in range(3):
+    attempts = 5
+    for attempt in range(attempts):
         wait = min_interval - (time.time() - last_request)
         if wait > 0:
             time.sleep(wait)
@@ -46,12 +51,13 @@ def ncbi_get(endpoint, params):
                 return response.read()
         except urllib.error.HTTPError as e:
             # Retry when rate limited or when NCBI has a server error
-            if e.code not in (429, 500, 502, 503) or attempt == 2:
-                raise FetchError(f"NCBI request failed: HTTP {e.code}")
+            if e.code not in (429, 500, 502, 503) or attempt == attempts - 1:
+                raise NcbiUnavailable(f"NCBI request failed: HTTP {e.code}")
         except urllib.error.URLError as e:
-            if attempt == 2:
-                raise FetchError(f"could not reach NCBI: {e.reason}")
-        time.sleep(1 + attempt)
+            if attempt == attempts - 1:
+                raise NcbiUnavailable(f"could not reach NCBI: {e.reason}")
+        # Back off a little more each time: 1, 2, 4, 8 seconds
+        time.sleep(2 ** attempt)
 
 def search(name, field):
     term = f'"{name}"[{field}]'

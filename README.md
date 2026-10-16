@@ -7,9 +7,10 @@ Taxonomy of things I can remember consuming
 
 - **Tree**: the whole tree, collapsible and searchable by taxon, food name or meaning; each clade shows what its name means, e.g. "Tetrapoda (four-legged)"; "Major ranks only" hides unranked clades. Each organism has a **Remove** button, which deletes its file from `taxonomy_files/` and rebuilds `taxon_tree.txt` and the cladogram PNGs (with an Undo right after). Without the website, delete the file and run `python3 make_tree.py`.
 - **Cladogram**: the drawn tree (needs matplotlib).
-- **Stats**: organism and taxon counts, overall and by kingdom.
+- **Stats**: organism and taxon counts, overall and by kingdom, and a coverage sunburst: rings for kingdom, phylum, class and order, each slice sized by how many common foods it holds and shaded by how many of them you've eaten.
+- **Relatives**: pick a food to see its closest relatives in your tree, or two foods to see their closest shared ancestor and the path from there to each (e.g. shiitake and human meet at Opisthokonta). Links like `#relatives?a=shiitake&b=human` open a comparison directly.
 - **Add organism**: look an organism up on NCBI, check the lineage and file name, then save it; `taxon_tree.txt` and the cladogram PNGs are rebuilt automatically. Commit the new file afterwards.
-- **Gaps**: the `gaps.py` report for any taxon, listing groups you haven't eaten from that contain common foods, with examples.
+- **Gaps**: the `gaps.py` report for any taxon, listing groups you haven't eaten from that contain common foods, with examples. Every food not eaten yet has an **Add** button that looks it up on NCBI and adds it in one step. **Suggest foods to try** ranks the common foods you haven't eaten by how many new branches each would add (within the taxon, if one is entered). Links like `#gaps?taxon=Rosaceae&rank=species&suggest=1` run both.
 
 Press Ctrl+C in the terminal to stop the server.
 
@@ -47,6 +48,12 @@ Major ranks (Kingdom, Phylum, Class, Order, Family, Genus, Species) are lined up
 By default, "not eaten yet" only lists groups that contain at least one commonly eaten species from `common_foods.tsv` (about 580 foods worldwide), each with up to three example foods, e.g. "Rodentia (rodents): e.g. guinea pig, capybara". `--all` (or the website's "Include groups with no common foods" box) lists every group. To extend the food list, add a line `food<TAB>scientific name` to `common_foods.tsv` and run `python3 update_common_foods.py`, which looks up the lineage on NCBI.
 
 `make_tree.py` warns about likely mistakes in the taxonomy files: two files that end at the same organism, and a name that appears under two different parents (usually a skipped or extra line in one file).
+
+`python3 gaps.py --suggest` lists the 20 common foods that would add the most new branches to the tree (a new class ranks above a new genus); `python3 gaps.py Rosaceae --suggest 5` limits it to a group.
+
+`python3 check_ncbi.py` compares every taxonomy file with NCBI's current lineage for its organism (NCBI renames and reclassifies taxa over time) and lists the differences; `--fix` rewrites the files that differ and rebuilds the tree. Organisms NCBI doesn't list, like `Homo sapiens sapiens`, are left as they are.
+
+`python3 export_site.py` writes a static copy of the website to `docs/` (tree, cladograms, stats, coverage and relatives; adding, removing and gaps need the server and are left out). Open `docs/index.html` directly, or publish it with GitHub Pages (Settings → Pages → Deploy from a branch → `main`, folder `/docs`). Run it again after changing the tree to update the copy.
 
 Run the tests with `python3 -m unittest discover tests`.
 
